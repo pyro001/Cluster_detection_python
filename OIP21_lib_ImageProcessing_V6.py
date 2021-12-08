@@ -155,6 +155,7 @@ def threshold(imgINT,ath):
     imgTH[imgINT >= ath] = 255
     return imgTH.astype(np.uint8)
 
+# 0 is black, 255 is white 
 def threshold2(imgINT,ath):
     return ((imgINT >= ath)*255).astype(np.uint8)
     
@@ -533,7 +534,9 @@ def img_close(I, PLH):
 
 N4 = [[0,0],[-1,0],[1,0],[0,-1],[0,1]]
 
-N8 = [[0,0],[-1,0],[1,0],[0,-1],[0,1],[-1,1],[1,-1],[1,1],[-1,-1]]
+N8 = [[0,0],[-1,0],[1,0],
+    [0,-1],[0,1],[-1,1],
+    [1,-1],[1,1],[-1,-1]]
 
 SmallDisk = [[0,0],[-1,0],[1,0],[0,-1],[0,1],[-1,1],[1,-1],[1,1],[-1,-1],
              [-2,-1],[-2,0],[-2,1],
@@ -556,8 +559,9 @@ def detect_edges(imgINT, Filter='Sobel'):
     IDx = filter_image_float(imgINT, Hx)
     IDy = filter_image_float(imgINT, Hy)
     # create intensity maps and phase maps: 
-    E = (np.sqrt(np.multiply(IDx, IDx)+np.multiply(IDy, IDy))).astype(np.float64)
-    Phi = (np.arctan2(IDy, IDx)*180/np.pi).astype(np.float64)
+    #E = (np.sqrt(np.multiply(IDx, IDx)+np.multiply(IDy, IDy))).astype(np.float32)
+    E = (np.sqrt(np.multiply(IDx, IDx)+np.multiply(IDy, IDy))).astype(np.uint8)
+    Phi = (np.arctan2(IDy, IDx)*180/np.pi).astype(np.float32)
     return E, Phi, IDx, IDy
 
 def laplace_sharpen(imgINT, w=0.1, Filter='L4', Threshold=False, TVal=0.1):
@@ -566,7 +570,7 @@ def laplace_sharpen(imgINT, w=0.1, Filter='L4', Threshold=False, TVal=0.1):
         'L8': HL8,
         'L12': HL12,
     }.get(Filter, HL4)
-    edges = filter_image_float(imgINT.astype(np.float64), HL.astype(np.float64))
+    edges = filter_image_float(imgINT.astype(np.float32), HL.astype(np.float32))
     edges = np.divide(edges, np.amax(np.abs(edges)))
     if Threshold:
         edges[np.abs(edges) <= TVal] = 0.0

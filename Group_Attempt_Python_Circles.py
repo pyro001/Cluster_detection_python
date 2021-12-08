@@ -1,7 +1,7 @@
 from OIP21_lib_ImageProcessing_V6 import *
 import cv2          # Some of the things in other library took to long
 
-Number = 1
+Number = 3
 
 # Start loading in the 3 image types, 
 # The first type is a Circle cluster image
