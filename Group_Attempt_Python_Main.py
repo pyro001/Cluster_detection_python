@@ -2,16 +2,14 @@ from OIP21_lib_ImageProcessing_V6  import *
 import cv2          # Some of the things in other library took to long
 import math
 
-img_orgs = ['simp_line.PNG','simp_triangle.PNG', 'simp_circle.PNG']
-img_short = ['simp_triangle.PNG', 'simp_triangle_easy.PNG']
-img_circles_many = ['./circles/simp_circle_1.PNG','./circles/simp_circle_2.PNG', './circles/simp_circle_3.PNG','./circles/simp_circle_4.PNG' ]
-img_line = ['simp_line.PNG']
+img_all_types_big = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
+img_all_types_small = ['./pictures/simp_line_1.PNG','./pictures/simp_triangle_1.PNG', './pictures/simp_circle_1.PNG']
+img_triangles = ['./pictures/simp_triangle_1.PNG', './pictures/simp_triangle_2.PNG']
+img_circles = ['./pictures/simp_circle_1.PNG','./pictures/simp_circle_2.PNG', './pictures/simp_circle_3.PNG','./pictures/simp_circle_4.PNG' ]
+img_lines = ['./pictures/simp_line_1.PNG']
 
 
-attempt_1 = False
-attempt_2 = True
-
-for x in img_orgs:
+for x in img_all_types_small:
     # Read the image 
     img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
 
@@ -31,11 +29,11 @@ for x in img_orgs:
     circles = cv2.HoughCircles(img_filtered.astype(np.uint8),   # HoughCircles only works with unit8 so just typecasting it for simplicity                                # image 
     cv2.HOUGH_GRADIENT,                                         # Method
     1,                                                          # dp inverse resolution (1 = max)
-    12,                                                         # minDist, apprximation of the max radius which makes sense
+    8,                                                         # minDist, apprximation of the max radius which makes sense
     param1=50,                                                  # Threshold 
-    param2=16,                                                  # The lower this is the more false positives and the higher it is it does not detect at all
-    minRadius=10,                                               # Minimum Radius 
-    maxRadius=16                                                # Maximum Radius
+    param2=15,                                                  # The lower this is the more false positives and the higher it is it does not detect at all
+    minRadius=6,                                               # Minimum Radius 
+    maxRadius=12                                                # Maximum Radius
     )
         
     try: 
