@@ -78,19 +78,24 @@ img_one_of_each_cluster_type = ['./pictures/one_cluster_big_picture.png']
 
 circleArray=[]      # Ath this should be global so it does not go poof 
 
-for x in img_just_circle_big: 
+import time
+t = time.time()
+
+for x in img_all_types_big: 
 
     # Read the image 
     img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
 
     # Maybe we can find some better way to clean it up or a way that we wont have to 
     # clean them up and re-shape em? 
-    if img_orginal == './pictures/big_circles_orginal.tif':
+    if img_orginal is './pictures/big_circles_orginal.tif':
         img_orginal = img_orginal[0:870,:]
     elif img_orginal == './pictures/big_lines_orginal.tif':
         img = img[0:870,0:1000]
     elif img_orginal == './pictures/big_triangles_orginal.png':
         img[755:844,672:845] = 0
+    
+    img_orginal = img_orginal[0:870,:] 
 
     #prepare for region labeling
     img = cv2.medianBlur(img_orginal, 7)
@@ -129,6 +134,7 @@ for x in img_just_circle_big:
         img_filtered = auto_contrast256(img_filtered)
         img_filtered = unsharp_mask(img_filtered)
         img_filtered = threshold(img_filtered, 80)
+        #ret,thresh = cv2.threshold(img,50,255,cv2.THRESH_BINARY) # Better threshholding? 
         img_filtered, Phi, IDx, IDy= detect_edges(img_filtered, Filter='Prewitt')
 
         # Ath the OIP21 library has to be altered so that the data type is Uint8 and not Float64
@@ -136,16 +142,17 @@ for x in img_just_circle_big:
         # Try to detect circles in the image 
         img_circles = cv2.cvtColor(img_filtered, cv2.COLOR_GRAY2BGR)
 
-        circles = cv2.HoughCircles(img_filtered.astype(np.uint8),   # HoughCircles only works with unit8 so just typecasting it for simplicity                                # image 
+        circles = cv2.HoughCircles(img_filtered,                    # HoughCircles only works with unit8 so just typecasting it for simplicity                                # image 
         cv2.HOUGH_GRADIENT,                                         # Method
         1,                                                          # dp inverse resolution (1 = max)
-        8,                                                         # minDist, apprximation of the max radius which makes sense
+        8,                                                          # minDist, apprximation of the max radius which makes sense
         param1=50,                                                  # Threshold 
         param2=15,                                                  # The lower this is the more false positives and the higher it is it does not detect at all
-        minRadius=6,                                               # Minimum Radius 
+        minRadius=6,                                                # Minimum Radius 
         maxRadius=12                                                # Maximum Radius
         )
-        
+
+        # The whole drawing lines is not needed and mainly just to make things easier to see.
         try: 
             if circles.any():
                 circles = np.uint16(np.around(circles))
@@ -221,7 +228,8 @@ for x in img_just_circle_big:
         # if rods > circles then it is rods or triangles 
             # if lines intersect X times then it is lines 
 
-
+    elapse = time.time() - t
+    print(elapse)
     print("-----------------------------------------------------\n\n")
     print("Number of Clusters : ")
     print(len(clusterArray))
