@@ -178,6 +178,46 @@ def threshold_binary(imgINT, ath):
 
 def threshold_binary2(imgINT, ath):
     return imgINT >= ath
+##-------------------------------------------------
+# ----------------------------------------------------------------------------
+# Auto Thresholding:
+# ----------------------------------------------------------------------------
+def mean_class_variance(hist, thresh):
+    wf = 0.0
+    uf = 0.0
+    ub = 0.0
+    wb = 0.0
+    total = np.sum(hist)
+    # print(total)
+    if len(hist) > 256:
+        raise IndexError("object too large, recheck input")
+    for i in range(len(hist)):
+        if i < thresh:
+            wb += hist[i]
+            ub = ub + (i * hist[i])
+        elif i >= thresh:
+            wf += hist[i]
+            uf = uf + (i * hist[i])
+    ub = ub / wb
+    uf = uf / wf
+    wb = wb / total
+    wf = wf / total
+    # print(wb,wf,uf,ub,total)
+    variance = float(wb * wf*((ub - uf)** 2))
+    return (variance, thresh)
+
+
+def auto_thresh(img):
+    hst = hist256(img)
+    variance_list = []
+    for thresh in range(len(hst)):
+        if thresh>0:
+            variance_list.append(mean_class_variance(hst, thresh))
+    # print(variance_list)
+    # print("MAX tuple: ", max(variance_list))
+    var,thresh=max(variance_list)
+    print("MAX tuple: ", thresh)
+    return threshold(img,thresh)
 
 
 def adjust_brightness(img, a):
