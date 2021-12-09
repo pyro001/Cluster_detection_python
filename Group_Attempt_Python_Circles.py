@@ -1,7 +1,7 @@
-from Cluster_detection_python.oiplib import *
+ # from Cluster_detection_python.oiplib import *
 import cv2          # Some of the things in other library took to long
 import math
-
+import oiplib
 
 Number = 2
 
