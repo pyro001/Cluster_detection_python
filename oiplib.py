@@ -1193,7 +1193,7 @@ def LocalMinima(img):
 
 def LocalMaxima(img):
     '''
-    find local minia coordinates in an intensity image... 
+    find local maxima coordinates in an intensity image...
     IDEA: For calculating local min/max values you can do a little trick.
          You need to perform dilate/erode operation and then compare pixel value with values of original image. 
          If value of original image and dilated/eroded image are equal therefore this pixel is local min/max.

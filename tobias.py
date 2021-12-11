@@ -100,7 +100,7 @@ elif Number == 3:
 #prepare for region labeling
 img = cv2.medianBlur(img, 7)
 ##### function data threshold(src, thresh, maxval of the image, type, dst=None)
-ret,thresh = cv2.threshold(img,50,255,cv2.THRESH_BINARY)
+thresh = auto_thresh(img)
 kernel = np.ones((7,7), np.uint8)
 threshDil = cv2.dilate(thresh, kernel, iterations=2)
 

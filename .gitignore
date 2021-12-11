@@ -122,3 +122,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+*.png
+
+Dash_files/
+
+cells.tif
+
+lines.py
+
+first_figure.html
