@@ -78,7 +78,6 @@ img_one_of_each_cluster_type = ['./pictures/one_cluster_big_picture.png']
 
 
 # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
-clusterArray=[]
 circleArray=[]      # Ath this should be global so it does not go poof 
 tottalNumberOfCircles = 0
 tottalNumberOfClusters = 0
@@ -94,6 +93,11 @@ import time
 t = time.time()
 
 for x in img_all_types_big: 
+
+    # Local variables 
+    clusterArray=[]
+    numberOfCircles = 0
+    numberOfClusters = 0
 
     # Read the image 
     img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
@@ -137,25 +141,17 @@ for x in img_all_types_big:
     size = math.ceil(math.sqrt(len(clusterArray)))
     count = 1
 
-    numberOfCircles = 0
     for i in clusterArray: 
+        numberOfClusters = numberOfClusters + 1
         tottalNumberOfClusters = tottalNumberOfClusters + 1 
         # Filter the cluster and then do edge detect before trying to see 
         # if the cluster is a cluster of circles, lines or hopefully triangles. 
 
-        # Opening is just another name of erosion followed by dilation. It is useful in removing noise.
-        #kernel = np.array(N4, np.uint8)
-        #img_filtered = cv2.morphologyEx(i, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3)))
-        #img_filtered = cv2.morphologyEx(i, cv2.MORPH_OPEN, kernel)
-        #img_filtered = auto_contrast256(img_filtered)
-
         img_filtered = auto_contrast256(i)      # This does not matter that much for the circles but improves the lines 
-        #img_filtered = unsharp_mask(img_filtered)      # Does not seem to do much for the circles or lines 
         img_filtered = threshold(img_filtered, 80)      # Auto thresholding would prob be better. 
         #ret,thresh = cv2.threshold(img,50,255,cv2.THRESH_BINARY) # Better threshholding? 
-        img_filtered, Phi, IDx, IDy= detect_edges(img_filtered, Filter='Prewitt')      # Best atm 
-        #img_filtered, Phi, IDx, IDy= detect_edges(img_filtered, Filter='Gradient')
-        #img_filtered, Phi, IDx, IDy= detect_edges(img_filtered, Filter='ISobel')
+        img_filtered, Phi, IDx, IDy= detect_edges(img_filtered, Filter='Prewitt')      
+
 
         # Ath the OIP21 library has to be altered so that the data type is Uint8 and not Float64
 
@@ -265,7 +261,7 @@ for x in img_all_types_big:
     print("Currenct picture : ")
     print(x)
     print("Number of Clusters : ")
-    print(len(clusterArray))
+    print(numberOfClusters)
     print("Number of Circles in clusters : ")
     print(numberOfCircles)
     #for b in circleArray:
