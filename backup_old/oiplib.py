@@ -44,13 +44,10 @@ UPDATE_4, 2018-10-10:
 # IMPORTS: 
 # ------------------------------------
 
-# needed almost every time:
-import cv2
-import imutils
+# needed almost every time: 
 import matplotlib.pyplot as plt  # for plotting
 import matplotlib.image as mpimg  # for image handling and plotting
 import numpy as np  # for all kinds of (accelerated) matrix / numerical operations
-from scipy import ndimage
 from scipy.signal import convolve2d
 from copy import copy, deepcopy
 
@@ -58,11 +55,10 @@ from copy import copy, deepcopy
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 
+
 # ------------------------------------
 # LOADING, SEPARATING AND CONVERTING TO INTENSITY: 
 # ------------------------------------
-from skimage.feature import peak_local_max
-from skimage.segmentation import watershed
 
 
 def load_image(imgURL):
@@ -148,7 +144,7 @@ def hist256(imgint8):
     hist = np.zeros(255)
     for cnt in range(255):
         hist[cnt] = np.sum(imgint8 == cnt)
-    return (hist)
+    return hist.astype(np.uint64)
 
 
 def cum_hist256(imgint8):
@@ -169,7 +165,6 @@ def threshold(imgINT, ath):
     return imgTH.astype(np.uint8)
 
 
-# 0 is black, 255 is white
 def threshold2(imgINT, ath):
     return ((imgINT >= ath) * 255).astype(np.uint8)
 
@@ -183,6 +178,46 @@ def threshold_binary(imgINT, ath):
 
 def threshold_binary2(imgINT, ath):
     return imgINT >= ath
+##-------------------------------------------------
+# ----------------------------------------------------------------------------
+# Auto Thresholding:
+# ----------------------------------------------------------------------------
+def mean_class_variance(hist, thresh):
+    wf = 0.0
+    uf = 0.0
+    ub = 0.0
+    wb = 0.0
+    total = np.sum(hist)
+    # print(total)
+    if len(hist) > 256:
+        raise IndexError("object too large, recheck input")
+    for i in range(len(hist)):
+        if i < thresh:
+            wb += hist[i]
+            ub = ub + (i * hist[i])
+        elif i >= thresh:
+            wf += hist[i]
+            uf = uf + (i * hist[i])
+    ub = ub / wb
+    uf = uf / wf
+    wb = wb / total
+    wf = wf / total
+    # print(wb,wf,uf,ub,total)
+    variance = float(wb * wf*((ub - uf)** 2))
+    return (variance, thresh)
+
+
+def auto_thresh(img):
+    hst = hist256(img)
+    variance_list = []
+    for thresh in range(len(hst)):
+        if thresh>0:
+            variance_list.append(mean_class_variance(hst, thresh))
+    # print(variance_list)
+    # print("MAX tuple: ", max(variance_list))
+    var,thresh=max(variance_list)
+    print("MAX tuple: ", thresh)
+    return threshold(img,thresh)
 
 
 def adjust_brightness(img, a):
@@ -221,61 +256,6 @@ def shift_intensities(imgint8, source_int, target_int):
     img_out = imgint8
     img_out[img_out == source_int] = target_int
     return img_out
-
-
-# ----------------------------------------------------------------------------
-# Ostu's  Thresholding:
-# ----------------------------------------------------------------------------
-
-def mean_class_variance(hist, thresh):
-    wf = 0.0
-    uf = 0.0
-    ub = 0.0
-    wb = 0.0
-    total = np.sum(hist)
-    # print(total)
-    if len(hist) > 256:
-        raise IndexError("object image depth too large, recheck input")
-    for i in range(len(hist)):
-        if i < thresh:
-            wb += hist[i]
-            ub = ub + (i * hist[i])
-        elif i >= thresh:
-            wf += hist[i]
-            uf = uf + (i * hist[i])
-    if wb == 0:
-        ub = 0
-    else:
-        ub = ub / wb
-    if wf == 0:
-        uf = 0
-    else:
-        uf = uf / wf
-    wb = wb / total
-    wf = wf / total
-
-    variance = float(wb * wf * ((ub - uf) ** 2))
-    return variance, thresh
-
-
-def auto_thresh(img, mode="Thresholding"):
-    hst = hist256(img)
-    variance_list = []
-    for thresh in range(len(hst)):
-        if thresh > 1:
-            variance_list.append(mean_class_variance(hst, thresh))
-    # print(variance_list)
-    # print("MAX tuple: ", max(variance_list))
-    var, thresh = max(variance_list)
-    # print("MAX tuple: ", thresh)
-    if mode == "Thresholding":
-        return threshold(img, thresh)
-    elif mode == "UpperSave":
-        img[img <= thresh] = 0
-        return img
-    elif mode == "LowerSave":
-        img[img >= thresh] = 255
-        return img
 
 
 # ----------------------------------------------------------------------------
@@ -396,7 +376,7 @@ def conv2(x, y, mode='same'):
 
 def filter_image(I, H):
     # Convolution-based filtering: 
-    Filtered = conv2(np.double(I), np.double(H));
+    Filtered = conv2(np.double(I), np.double(H))
     # Reducing to original size and converting back to uint8: 
     # and CUT to the range between 0 and 255.
     return (crop_levels(Filtered)).astype(np.uint8)
@@ -634,9 +614,7 @@ def img_close(I, PLH):
 
 N4 = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]
 
-N8 = [[0, 0], [-1, 0], [1, 0],
-      [0, -1], [0, 1], [-1, 1],
-      [1, -1], [1, 1], [-1, -1]]
+N8 = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1], [-1, 1], [1, -1], [1, 1], [-1, -1]]
 
 SmallDisk = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1], [-1, 1], [1, -1], [1, 1], [-1, -1],
              [-2, -1], [-2, 0], [-2, 1],
@@ -660,9 +638,8 @@ def detect_edges(imgINT, Filter='Sobel'):
     IDx = filter_image_float(imgINT, Hx)
     IDy = filter_image_float(imgINT, Hy)
     # create intensity maps and phase maps: 
-    # E = (np.sqrt(np.multiply(IDx, IDx)+np.multiply(IDy, IDy))).astype(np.float32)
-    E = (np.sqrt(np.multiply(IDx, IDx) + np.multiply(IDy, IDy))).astype(np.uint8)
-    Phi = (np.arctan2(IDy, IDx) * 180 / np.pi).astype(np.float32)
+    E = (np.sqrt(np.multiply(IDx, IDx) + np.multiply(IDy, IDy))).astype(np.float64)
+    Phi = (np.arctan2(IDy, IDx) * 180 / np.pi).astype(np.float64)
     return E, Phi, IDx, IDy
 
 
@@ -672,7 +649,7 @@ def laplace_sharpen(imgINT, w=0.1, Filter='L4', Threshold=False, TVal=0.1):
         'L8': HL8,
         'L12': HL12,
     }.get(Filter, HL4)
-    edges = filter_image_float(imgINT.astype(np.float32), HL.astype(np.float32))
+    edges = filter_image_float(imgINT.astype(np.float64), HL.astype(np.float64))
     edges = np.divide(edges, np.amax(np.abs(edges)))
     if Threshold:
         edges[np.abs(edges) <= TVal] = 0.0
@@ -932,7 +909,6 @@ def hough_circles(imgBIN, Nx, Ny, Nr, K=5, rmin=1, rmax=100):
     xbar = np.arange(Nx)
     ybar = np.arange(Ny)
     # collect the non-zero / foreground elements: 
-    nzi = np.nonzero(imgBIN)
     nzi = np.nonzero(imgBIN)
     y = nzi[0][:]
     x = nzi[1][:]
@@ -1217,7 +1193,7 @@ def LocalMinima(img):
 
 def LocalMaxima(img):
     '''
-    find local minia coordinates in an intensity image... 
+    find local maxima coordinates in an intensity image...
     IDEA: For calculating local min/max values you can do a little trick.
          You need to perform dilate/erode operation and then compare pixel value with values of original image. 
          If value of original image and dilated/eroded image are equal therefore this pixel is local min/max.
@@ -1249,7 +1225,9 @@ def plot_hist(I, title='Histogram', color='tab:blue'):
     fig, ax = plt.subplots()
     ax.set_xlabel('intensity level')
     ax.set_ylabel('number of pixels', color=color)
-    plth = ax.stem(hist256(I), color, markerfmt=' ', basefmt=' ')
+    y=hist256(I)
+    x=np.linspace(0,255,256)
+    plth = ax.stem(x,y, color, markerfmt=' ', basefmt=' ')
     ax.set_title(title)
     return fig, ax, plth
 
@@ -1282,7 +1260,8 @@ def plot_image_hist_cumhist(I, title='Intensity Image', cmap='gray', vmax=255, v
     color = 'tab:blue'
     ax2.set_xlabel('intensity level')
     ax2.set_ylabel('number of pixels', color=color)
-    plth = ax2.stem(hist256(I), color, markerfmt=' ', basefmt=' ')
+    pltdat = hist256(I).ravel()
+    plth = ax2.stem(pltdat, color, markerfmt=' ', basefmt='-')
     ax2.tick_params(axis='y', labelcolor=color)
     ax2.set_title('Histogram')
 
@@ -1348,39 +1327,3 @@ def plot_image_sequence(sequence, title='Intensity Image', cmap='gray', vmax=255
         ax.set_title('threshold level: %3i' % (i))
         plt.pause(0.01)
     return fig, ax
-
-
-def locwatershed(img, thresh2):
-    print(img.shape)
-    D = ndimage.distance_transform_edt(thresh2)
-    localMax = peak_local_max(D, indices=False, min_distance=7,
-                              labels=thresh2)
-    cv2.imshow("Distance MAp", D)
-
-    # perform a connected component analysis on the local peaks,
-    # using 8-connectivity, then appy the Watershed algorithm
-    markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
-    labels = watershed(-D, markers, mask=thresh2)
-
-    print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
-    for label in np.unique(labels):
-        # if the label is zero, we are examining the 'background'
-        # so simply ignore it
-        if label == 0:
-            continue
-        # otherwise, allocate memory for the label region and draw
-        # it on the mask
-        mask = np.zeros(thresh2.shape, dtype="uint8")
-        mask[labels == label] = 255
-        # detect contours in the mask and grab the largest one
-        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-                                cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        c = max(cnts, key=cv2.contourArea)
-        # draw a circle enclosing the object
-        ((x, y), r) = cv2.minEnclosingCircle(c)
-        cv2.circle(img, (int(x), int(y)), int(r), (0, 255, 0), 1)
-    # cv2.putText(image, "#{}".format(label), (int(x) - 10, int(y)),
-    # 	cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-    # show the output image
-    return (img, len(np.unique(labels)) - 1)
