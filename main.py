@@ -64,8 +64,9 @@ def FloodFill_BF_modified(IMG, u, v, label):
 
 if __name__ == '__main__':
 
-    img_all_types_big = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif',
-                         './pictures/big_triangles_orginal.png']
+    # img_all_types_big = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif',
+                         # './pictures/big_triangles_orginal.png']
+    img_all_types_big = ['./pictures/big_lines_orginal.tif']# ["./pictures/big_triangles_orginal.png"]#
     img_all_types_small = ['./pictures/simp_line_1.PNG', './pictures/simp_triangle_1.PNG',
                            './pictures/simp_circle_1.PNG']
     img_triangles = ['./pictures/simp_triangle_1.PNG', './pictures/simp_triangle_2.PNG']
@@ -153,6 +154,8 @@ if __name__ == '__main__':
         ####################################################################
         watershed_clusters=[]
         for i in clusterArray:
+            padw=3
+            i=np.pad(i, ((padw, padw), (padw, padw)), 'constant')
             numberOfClusters = numberOfClusters + 1
             totalNumberOfClusters = totalNumberOfClusters + 1
             # Filter the cluster and then do edge detect before trying to see
@@ -161,11 +164,11 @@ if __name__ == '__main__':
             img_contrast = auto_contrast256(i)  # This does not matter that much for the circles but improves the lines
             img_thresholded = auto_thresh(img_contrast)  # Auto thresholding would prob be better.
             # ret,thresh = cv2.threshold(img,50,255,cv2.THRESH_BINARY) # Better threshholding?
-            try:
-                watershed_img,c= locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresholded)
-                watershed_clusters.append( c)
-            except Exception as Error:
-                print(Error)
+            watershed_img,c= locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresholded)
+            watershed_clusters.append(c)
+            # except Exception as Error:
+            #     watershed_img=i
+            #     print(Error)
             img_edges, Phi, IDx, IDy = detect_edges(img_thresholded, Filter='Prewitt')
 
             # Ath the OIP21 library has to be altered so that the data type is Uint8 and not Float64

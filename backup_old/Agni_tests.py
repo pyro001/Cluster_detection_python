@@ -10,31 +10,54 @@ from skimage.segmentation import watershed
 from OIP21_lib_ImageProcessing_V6  import *
 
 
+def skeletonize(img):
+    """ OpenCV function to return a skeletonized version of img, a Mat object"""
 
+    #  hat tip to http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
+
+    img = img.copy() # don't clobber original
+    skel = img.copy()
+
+    skel[:,:] = 0
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+
+    while True:
+        eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, kernel)
+        temp = cv2.morphologyEx(eroded, cv2.MORPH_DILATE, kernel)
+        temp  = cv2.subtract(img, temp)
+        skel = cv2.bitwise_or(skel, temp)
+        img[:,:] = eroded[:,:]
+        if cv2.countNonZero(img) == 0:
+            break
+
+    return skel
 kernel = np.ones((5, 5), np.uint8)
 if __name__ == '__main__':
-    img = cv2.imread("./pictures/big_triangles_orginal.png")
+    img = cv2.imread("./pictures/big_lines_orginal.tif")
     # img = cv2.imread("R001_001.tif")
     # img = cv2.imread("001_002.tif")
     # img = cv2.imread("SingleTCell.png")
     # img=cv2.imread("one_cluster_big_picture.png")
-    gray = convert2LIGHT(img[:,:,0],img[:,:,1],img[0:870,:,2])
+    gray = convert2LIGHT(img[0:870,:,0],img[0:870,:,1],img[0:870,:,2])
         # (img[0:870,:,0]+img[0:870,:,1]+img[0:870,:,2])/3
     gauss_img = auto_contrast256(min_filter(gray,2))
 
     thresh = auto_thresh(gray)
     # thresh2 = auto_thresh(gauss_img)
     # gauss_img, phi, idx, idy = detect_edges(thresh)
-    kernel = np.array(np.ones(3), np.uint8)
+    kernel = np.ones((3, 3), np.uint8)
+
+    # Using cv2.erode() method
+
     # gauss_img, phi, idx, idy = detect_edges(gray)
-    # thresh2 =  cv2.erode(cv2.dilate(thresh,kernel),kernel,iterations=1)
+    thresh2 =  cv2.erode(thresh,kernel,iterations=1)
     thresh2,phii=laplace_sharpen(thresh)
     # thresh2= (gauss_img)
     cv2.imshow('thresh', thresh)
     cv2.imshow('gauss', gray)
     cv2.imshow('thresh2', thresh2)
     D = ndimage.distance_transform_edt(thresh2)
-    localMax = peak_local_max(D, indices=False, min_distance=7,
+    localMax = peak_local_max(D, indices=False, min_distance=5,
                               labels=thresh2)
     cv2.imshow("Distance MAp", D)
 
