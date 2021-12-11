@@ -1350,12 +1350,33 @@ def plot_image_sequence(sequence, title='Intensity Image', cmap='gray', vmax=255
     return fig, ax
 
 
-def locwatershed(img, thresh2):
-    print(img.shape)
+def unpad(dens, pad):
+    """
+    Input:  dens   -- np.ndarray(shape=(nx,ny,nz))
+            pad    -- np.array(px,py,pz)
+
+    Output: pdens -- np.ndarray(shape=(nx-px,ny-py,nz-pz))
+    """
+
+    nx, ny = dens.shape
+    pdens= dens[2:nx-pad,2:ny-pad]
+    # pl[2]:nz-pr[2]]
+
+    return pdens
+
+
+def locwatershed(img, thresh2, padw=4):
+    # kernel = np.ones((3, 3), np.uint8)
+    # thresh2 = np.pad(thresh2, ((padw, padw), (padw, padw)), 'constant')
+
+    # Using cv2.erode() method
+    # thresh2 = cv2.erode(thresh2, kernel, iterations=1)
+
+    # print(img.shape)
     D = ndimage.distance_transform_edt(thresh2)
-    localMax = peak_local_max(D, indices=False, min_distance=7,
+    localMax = peak_local_max(D, indices=False, min_distance=5,
                               labels=thresh2)
-    cv2.imshow("Distance MAp", D)
+    # cv2.imshow("Distance MAp", D)
 
     # perform a connected component analysis on the local peaks,
     # using 8-connectivity, then appy the Watershed algorithm
@@ -1381,6 +1402,6 @@ def locwatershed(img, thresh2):
         ((x, y), r) = cv2.minEnclosingCircle(c)
         cv2.circle(img, (int(x), int(y)), int(r), (0, 255, 0), 1)
     # cv2.putText(image, "#{}".format(label), (int(x) - 10, int(y)),
-    # 	cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    # cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
     # show the output image
     return (img, len(np.unique(labels)) - 1)
