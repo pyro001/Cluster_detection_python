@@ -78,15 +78,17 @@ img_one_of_each_cluster_type = ['./pictures/one_cluster_big_picture.png']
 #
 # Figgure out Optimization 
 #
-# ??  
+# Filtering might need a tune up depending on implementation of Rods + Triangles and stuff 
+#
+# When cutting the image in line 115 I think we should maybe look into it a bit more since the lines
+# would still have the half clusters on the side.. 
 
 
 # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
 tottalNumberOfClusters = 0
 tottalNumberOfCircles = 0
 tottalNumberOfLines = 0
-
-
+tottalNumberOfTriangles = 0
 
 tottalTime = 0 
 shortestTime = 900000000
@@ -104,19 +106,13 @@ for x in img_all_types_big:
     numberOfClusters = 0
     numberOfCircles = 0
     numberOfLine = 0
+    numberOfTriangles = 0
 
     # Read the image 
     img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
 
-    # Maybe we can find some better way to clean it up or a way that we wont have to 
-    # clean them up and re-shape em? 
-    if img_orginal is './pictures/big_circles_orginal.tif':
-        img_orginal = img_orginal[0:870,:]
-    elif img_orginal == './pictures/big_lines_orginal.tif':
-        img = img[0:870,0:1000]
-    elif img_orginal == './pictures/big_triangles_orginal.png':
-        img[755:844,672:845] = 0
-    
+    # The Triangle and Circle image have some crap at the bottom we need to cut of, 
+    # We might have to look into this a bit more since the crap can also be on the side.. 
     img_orginal = img_orginal[0:870,:] 
 
     #prepare for region labeling
@@ -185,10 +181,10 @@ for x in img_all_types_big:
                     # circle outline
                     radius = i[2]
                     cv2.circle(img_circles, center, radius, (255, 0, 255), 3)
-                    numberOfCircles = numberOfCircles + 1             # this is kinda silly and could be done better, should not incrament both at same time 
-                    tottalNumberOfCircles = tottalNumberOfCircles + 1
+                    numberOfCircles = numberOfCircles + 1     
+                    tottalNumberOfCircles = tottalNumberOfCircles + 1       
         except:
-            circleArray.append([0,0,0])
+            circleArray.append([0,0,0])     # do we need to keep track of indivitual clusters? 
 
 
 
@@ -218,19 +214,13 @@ for x in img_all_types_big:
                 numberOfLine = numberOfLine + 1
                 tottalNumberOfLines = tottalNumberOfLines + 1
             
-            
-        linesP = cv2.HoughLinesP(img_filtered,      # Image  
-        1,                                          # Lines 
-        np.pi / 180,                                # Rho 
-        30,                                         # Theta 
-        None,                                       # Threshhold 
-        60,                                         # Max Line Length
-        60)                                         # Max Line Gap 
-            
-        if linesP is not None:
-            for i in range(0, len(linesP)):
-                l = linesP[i][0]
-                cv2.line(img_lines_prob, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv2.LINE_AA)
+
+        # Triangle stuff 
+        triangles = None
+
+        if triangles is not None: 
+            numberOfTriangles = numberOfTriangles + 1
+            tottalNumberOfTriangles = tottalNumberOfTriangles + 1
 
         # to show circles in clusters 
         plt.subplot(size,size,count)
@@ -239,19 +229,7 @@ for x in img_all_types_big:
         plt.yticks([])
         count+=1
 
-        # to show lines in clusters 
-        #plt.subplot(size,size,count)
-        #plt.imshow(img_lines,'gray',vmin=0,vmax=255)
-        #plt.xticks([])
-        #plt.yticks([])
-        #count+=1
 
-        # to show triangles... ha-ha 
-
-        # then find out if it is circle, line or triangle cluster 
-        # if circles > lines then its circles, discard lines and triangles 
-        # if rods > circles then it is rods or triangles 
-            # if lines intersect X times then it is lines 
 
     # Just gathering some data and stuff, not sure how much is relavant or wanted
     elapse = time.time() - t
@@ -276,6 +254,8 @@ for x in img_all_types_big:
         #print(np.size(b)/3)             # Still get 0 as 1 so have to implement this better but this print the number of circles in each cluster
     print("Number of Lines in clusters : ")
     print(numberOfLine)
+    print("Number of Triangles in clusters : ")
+    print(numberOfTriangles)
     
     print("Compile time : ")
     print(elapse)
@@ -293,6 +273,9 @@ print("\nNumber of Lines in clusters : ")
 print(tottalNumberOfLines)
 print("Average number of lines in clusters : ")
 print(tottalNumberOfLines/tottalNumberOfClusters)
+print("\nNumber of Triangles in clusters : ")
+print("Average number of Triangles in clusters : ")
+print(tottalNumberOfTriangles/tottalNumberOfClusters)
 
 print("\n\n------------------------ Time Stuff ------------------")
 print("Tottal compile time : ")
