@@ -82,8 +82,10 @@ img_one_of_each_cluster_type = ['./pictures/one_cluster_big_picture.png']
 
 
 # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
-tottalNumberOfCircles = 0
 tottalNumberOfClusters = 0
+tottalNumberOfCircles = 0
+tottalNumberOfLines = 0
+
 
 
 tottalTime = 0 
@@ -96,11 +98,12 @@ longestPicture = 'asd'
 for x in img_all_types_big: 
 
     # Local variables 
+    t = time.time()
     clusterArray=[]                     # This should maybe be global? 
     circleArray=[]                      # This should also maybe be global? 
-    numberOfCircles = 0
     numberOfClusters = 0
-    t = time.time()
+    numberOfCircles = 0
+    numberOfLine = 0
 
     # Read the image 
     img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
@@ -212,6 +215,8 @@ for x in img_all_types_big:
                 pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
                 pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
                 cv2.line(img_lines, pt1, pt2, (0,0,255), 3, cv2.LINE_AA)
+                numberOfLine = numberOfLine + 1
+                tottalNumberOfLines = tottalNumberOfLines + 1
             
             
         linesP = cv2.HoughLinesP(img_filtered,      # Image  
@@ -268,21 +273,28 @@ for x in img_all_types_big:
     print("Number of Circles in clusters : ")
     print(numberOfCircles)
     #for b in circleArray:
-        #print(np.size(b)/3)             # Still get 0 as 1 so have to implement this better
+        #print(np.size(b)/3)             # Still get 0 as 1 so have to implement this better but this print the number of circles in each cluster
+    print("Number of Lines in clusters : ")
+    print(numberOfLine)
+    
     print("Compile time : ")
     print(elapse)
     print("\n\n-----------------------------------------------------")
     plt.show()
 
-print("-----------------------------------------------------\n\n")
+print("------------------------ Data Stuff ------------------\n\n")
 print("Number of Clusters : ")
 print(tottalNumberOfClusters)
-print("Number of Circles in clusters : ")
+print("\nNumber of Circles in clusters : ")
 print(tottalNumberOfCircles)
-print("Average number of circles in cluster : ")
+print("Average number of circles in clusters : ")
 print(tottalNumberOfCircles/tottalNumberOfClusters)
+print("\nNumber of Lines in clusters : ")
+print(tottalNumberOfLines)
+print("Average number of lines in clusters : ")
+print(tottalNumberOfLines/tottalNumberOfClusters)
 
-print("\n\n-------------- Time stuff ---------------------")
+print("\n\n------------------------ Time Stuff ------------------")
 print("Tottal compile time : ")
 print(tottalTime)
 print("Average compile time : ")
