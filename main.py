@@ -3,6 +3,7 @@ from numpy import uint8
 from OIP21_lib_ImageProcessing_V6  import *
 import cv2          # Some of the things in other library took to long
 import math
+import time
 
 
 def FloodFillLabeling_modified(imgBIN):
@@ -71,14 +72,16 @@ img_just_circle_big = ['./pictures/big_circles_orginal.tif']
 img_one_of_each_cluster_type = ['./pictures/one_cluster_big_picture.png']
 
 #  ---------------------- Issues --------------------
-# The image re-shapeing is not working so currently the images have the dam bottom crap and
-# some partial clusters in them.. hmm .. 
-# 
-# Have to take the stuff from Tobias and run circle detection on it  
+# Rods/Lines and Triangles not implemented currently 
+#
+# Have to figgure out what the relevant gatherd data is?
+#
+# Figgure out Optimization 
+#
+# ??  
 
 
 # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
-circleArray=[]      # Ath this should be global so it does not go poof 
 tottalNumberOfCircles = 0
 tottalNumberOfClusters = 0
 
@@ -89,15 +92,15 @@ longestTime = 0
 shortestPicture = 'asd'
 longestPicture = 'asd'
 
-import time
-t = time.time()
 
 for x in img_all_types_big: 
 
     # Local variables 
-    clusterArray=[]
+    clusterArray=[]                     # This should maybe be global? 
+    circleArray=[]                      # This should also maybe be global? 
     numberOfCircles = 0
     numberOfClusters = 0
+    t = time.time()
 
     # Read the image 
     img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
@@ -284,11 +287,11 @@ print("Tottal compile time : ")
 print(tottalTime)
 print("Average compile time : ")
 print(tottalTime/len(img_all_types_big))
-print("Shortest compile time : ")
+print("\nShortest compile time : ")
 print(shortestTime)
 print("Shortest compile time picture : ")
 print(shortestPicture)
-print("Longest compile time : ")
+print("\nLongest compile time : ")
 print(longestTime)
 print("Longest compile time picture : ")
 print(longestPicture)
