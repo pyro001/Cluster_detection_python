@@ -1,38 +1,285 @@
-import matplotlib.pyplot
-
+# v2 - trying to add Tobias segmentation to it 
+from numpy import uint8
 from OIP21_lib_ImageProcessing_V6 import *
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-
-kernel = np.ones((5, 5), np.uint8)
-Gauss5 = np.array([[0, 1, 2, 1, 0],
-                   [1, 3, 5, 3, 1],
-                   [2, 5, 9, 5, 2],
-                   [1, 3, 5, 3, 1],
-                   [0, 1, 2, 1, 0]])
-Gauss5Norm = Gauss5 / np.sum(Gauss5)
-
-
+import cv2  # Some of the things in other library took to long
+import math
+import time
 
 
 if __name__ == '__main__':
-    # img = cv2.imread("T001.png")
-    img = cv2.imread("R001_001.tif")
-    # img = cv2.imread("001_002.tif")
 
-    img=threshold(img[:,:,0],100)
-    img_edge, Phi, IDx, IDy= detect_edges(img, Filter='Sobel')
-    thinning_img = Thinning(Phi)
+    img_all_types_big = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
+    #img_all_types_big = ['./pictures/big_lines_orginal.tif']# ["./pictures/big_triangles_orginal.png"]#
+    img_all_types_small = ['./pictures/simp_line_1.PNG', './pictures/simp_triangle_1.PNG',
+                           './pictures/simp_circle_1.PNG']
+    img_triangles = ['./pictures/simp_triangle_1.PNG', './pictures/simp_triangle_2.PNG']
+    img_circles = ['./pictures/simp_circle_1.PNG', './pictures/simp_circle_2.PNG', './pictures/simp_circle_3.PNG',
+                   './pictures/simp_circle_4.PNG']
+    img_lines = ['./pictures/simp_line_1.PNG']
 
-    cv2.imshow('Input', img)
-    cv2.imshow('thinning',thinning_img)
-    cv2.imshow('idx', IDx)
-    cv2.imshow('idy', IDy)
-    cv2.imshow('phi', Phi)
-    cv2.imshow('e', thinning_img)
-    # cv2.imshow('blur', canny)
+    img_just_circle_big = ['./pictures/big_circles_orginal.tif']
+    img_one_of_each_cluster_type = ['./pictures/one_cluster_big_picture.png']
 
-    # matplotlib.pyplot.plot(plot_image_hist_cumhist(img))
+    #  ---------------------- Issues --------------------
+    # Rods/Lines and Triangles not implemented currently
+    #
+    # Have to figgure out what the relevant gatherd data is?
+    #
+    # Figgure out Optimization
+    #
+    # Filtering might need a tune up depending on implementation of Rods + Triangles and stuff
+    #
+    # When cutting the image in line 115 I think we should maybe look into it a bit more since the lines
+    # would still have the half clusters on the side..
 
-    cv2.waitKey(0)
+    # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
+    totalNumberOfClusters = 0  # Region labelling
+    totalNumberOfCircles = 0  # from hough transform
+    totalNumberOfLines = 0  # hough lines
+    totalNumberOfTriangles = 0  # hough lines triangle detections ?
+    totalNumberOfParticles = 0  # particles in cluster: watershed
+
+    totalTime = 0
+    shortestTime = 900000000
+    longestTime = 0
+    shortestPicture = 'asd'
+    longestPicture = 'asd'
+    circlePicture = 'asd'
+    linePicture = 'asd'
+    trianglePicture = 'asd'
+
+    for x in img_all_types_big:  ## loop through all the images images stored in a vector
+
+        # Local variables
+        t = time.time()
+        clusterArray = []  # This should maybe be global?
+        circleArray = []  # This should also maybe be global?
+        numberOfClusters = 0
+        numberOfCircles = 0
+        numberOfLine = 0
+        numberOfTriangles = 0
+
+        # Read the image
+        img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
+
+        # The Triangle and Circle image have some stuff at the bottom we need to cut of,
+        img_orginal = img_orginal[0:870, :]  ## cut off the bottom manual at this moment
+
+        # :: automate this// feed it based  on the sample image
+        # ------------------------------------
+        # ------------------------------------
+        # Segmentation:
+        # ------------------------------------
+        # ------------------------------------
+
+        # prepare for region labeling
+        img = cv2.medianBlur(img_orginal, 7)
+        thresh = auto_thresh(img)
+        kernel = np.ones((7, 7), np.uint8)
+        threshDil = cv2.dilate(thresh, kernel, iterations=2)
+
+        # 255 to 1 since floodfill is expecting that
+        threshDilBin = threshDil.copy()
+        threshDilBin[threshDilBin == 255] = 1
+        threshDilBin = threshDilBin.astype('uint16')
+
+        labelsOIP, zones = FloodFillLabeling_modified(threshDilBin)
+
+        height, width = np.shape(img_orginal)
+        ## storing the image coords in a vector
+        for i in zones:
+            y2 = i[0]
+            y1 = i[1]
+            x2 = i[2]
+            x1 = i[3]
+            if (x1 > 0 and y1 > 0 and x2 < width - 1 and y2 < height - 1):
+                clusterArray.append(img_orginal[y1:y2, x1:x2])## the clusters are now in a vector
+
+        size = math.ceil(math.sqrt(len(clusterArray)))
+        count = 1
+
+        watershed_clusters=[]
+        for i in clusterArray:
+            # Padding for biasing the threshholding            
+            padw=3
+            i=np.pad(i, ((padw, padw), (padw, padw)), 'constant')
+
+            numberOfClusters = numberOfClusters + 1
+            totalNumberOfClusters = totalNumberOfClusters + 1
+
+            img_contrast = auto_contrast256(i)  # This does not matter that much for the circles but improves the lines
+            img_thresholded = auto_thresh(img_contrast)  # Auto thresholding would prob be better.
+            watershed_img,c= locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresholded)
+            watershed_clusters.append(c)
+            img_edges, Phi, IDx, IDy = detect_edges(img_thresholded, Filter='Prewitt')
+
+            # Ath the OIP21 library has to be altered so that the data type is Uint8 and not Float64
+            circles = cv2.HoughCircles(img_edges,
+                                       # HoughCircles only works with unit8 so just typecasting it for simplicity
+                                       # image
+                                       cv2.HOUGH_GRADIENT,  # Method   /bTODO ::: look at this
+                                       1,  # dp inverse resolution (1 = max)/bTODO ::: look at this
+                                       8,  # minDist, approximation of the max radius which makes sense
+                                       param1=50,  # Threshold
+                                       param2=12, # #:: 12 best tolerance of the algorithm how many points on the circle the
+                                       # algo needs to make an image The lower this is the more false positives and
+                                       # the higher it is it does not detect at all
+                                       minRadius=6,  # Minimum Radius :: generated Circle radius control
+                                       maxRadius=12  # Maximum Radius
+                                       )
+
+            # The whole drawing lines is not needed and mainly just to make things easier to see.
+            if circles is not None:
+                circles = np.uint16(np.around(circles))
+                    #currenctCircles = 0
+                for i in circles[0, :]:
+                        # painting the circles onto the image
+                    center = (i[0], i[1])
+                        # circle center
+                    cv2.circle(watershed_img, center, 1, (0, 100, 100), 3)
+                        # circle outline
+                    radius = i[2]
+                    cv2.circle(watershed_img, center, radius, (255, 0, 255), 3)
+                        # end of image painting
+                    numberOfCircles = numberOfCircles + 1
+
+
+      
+            # Principal component analasys 
+            if (numberOfCircles/np.sum(watershed_clusters)) >= 0.9: 
+                #print("This is probably a circle!")
+                totalNumberOfCircles = numberOfCircles
+                circlePicture = x
+                circleClusters = numberOfClusters
+            else :
+                if (numberOfCircles/np.sum(watershed_clusters)) >= 0.40: 
+                    #print("This is probably a Triangle!")
+                    numberOfTriangles = numberOfTriangles + c
+                    totalNumberOfTriangles = totalNumberOfTriangles + c
+                    trianglePicture = x
+                    trianglesClusters = numberOfClusters
+                else : 
+                    linePicture = x
+                    lineClusters = numberOfClusters
+                    #print("This is probably a Rod!")
+                    # ------------------------------------
+                    # ------------------------------------
+                    # line Detection : Hough lines
+                    # ------------------------------------
+                    # ------------------------------------
+
+                    # Try to detect lines in the image
+                    img_lines = cv2.cvtColor(img_edges, cv2.COLOR_GRAY2BGR)
+                    img_lines_prob = np.copy(img_lines)
+
+                    lines = cv2.HoughLines(img_edges,  # Image
+                                        1,  # Lines
+                                        np.pi / 180,  # Rho
+                                        40,  # Theta
+                                        None,  # Srn / Stn
+                                        40,  # min_Theta
+                                        70)  # Max_Theta
+
+                    if lines is not None:
+                        for i in range(0, len(lines)):
+                            rho = lines[i][0][0]
+                            theta = lines[i][0][1]
+                            a = math.cos(theta)
+                            b = math.sin(theta)
+                            x0 = a * rho
+                            y0 = b * rho
+                            pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
+                            pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
+                            cv2.line(img_lines, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
+                            numberOfLine = numberOfLine + 1
+                            totalNumberOfLines = totalNumberOfLines + 1
+
+
+            # to show circles in clusters
+
+            plt.subplot(size, size, count)
+            #plt.imshow(img_circles, cmap=plt.cm.nipy_spectral)
+            plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
+            plt.xticks([])
+            plt.yticks([])
+            count += 1
+
+        # Just gathering some data and stuff, not sure how much is relavant or wanted
+        elapse = time.time() - t
+        if elapse <= shortestTime:
+            shortestTime = elapse
+            shortestPicture = x
+
+        if elapse >= longestTime:
+            longestTime = elapse
+            longestPicture = x
+
+        totalTime = totalTime + elapse
+
+        print("-----------------------------------------------------\n\n")
+        print("Currenct picture : ")
+        print(x)
+        print("Number of Clusters : ")
+        print(numberOfClusters)
+        print("Particles vs Circles ratio : ")
+        print(numberOfCircles/np.sum(watershed_clusters))
+        print("Number of Circles in clusters with Hough Line detect : ")
+        print(numberOfCircles)
+        print("Number of particles in clusters with watersheading : ")
+        print(np.sum(watershed_clusters))
+        print("Number of Lines in clusters : ")
+        print(numberOfLine)
+        print("Number of Triangles in clusters : ")
+        print(numberOfTriangles)
+
+        print("Compile time : ")
+        print(elapse)
+        print("\n\n-----------------------------------------------------")
+        plt.show()
+
+    print("------------------------ Data Stuff ------------------\n\n")
+    print("Total number of Clusters : ")
+    print(totalNumberOfClusters)
+    
+    print("\n\nPicture with most ammount of Circles : ")
+    print(circlePicture)
+    print("Number of Clusters in picture")
+    print(circleClusters)
+    print("Number of Circles in picture : ")
+    print(totalNumberOfCircles)
+    print("Average number of circles in clusters : ")              
+    print(totalNumberOfCircles / circleClusters)
+    
+    print("\n\nPicture with most ammout of lines")
+    print(linePicture)
+    print("Number of Clusters in picture")
+    print(lineClusters)
+    print("Number of Lines in picture : ")
+    print(totalNumberOfLines)
+    print("Average number of lines in clusters : ")
+    print(totalNumberOfLines / lineClusters)              
+
+    print("\n\nPicture with most ammount of Triangles : ")
+    print(trianglePicture)
+    print("Numver of Clusters in picture")
+    print(trianglesClusters)
+    print("Number of Triangles in clusters : ")
+    print(totalNumberOfTriangles)
+    print("Average number of Triangles in clusters : ")            
+    print(totalNumberOfTriangles / trianglesClusters)
+
+    print("\n\n------------------------ Time Stuff ------------------")
+    print("Tottal compile time : ")
+    print(totalTime)
+    print("Average compile time : ")
+    print(totalTime / len(img_all_types_big))
+    print("\nShortest compile time : ")
+    print(shortestTime)
+    print("Shortest compile time picture : ")
+    print(shortestPicture)
+    print("\nLongest compile time : ")
+    print(longestTime)
+    print("Longest compile time picture : ")
+    print(longestPicture)
+
+    print("\n\n-----------------------------------------------------")

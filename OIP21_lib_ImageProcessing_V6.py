@@ -122,10 +122,43 @@ def FloodFill_BF_modified(IMG, u, v, label):
     return IMG, [xmax, xmin, ymax, ymin]
 
 def pre_region_labeling_filtering(img):
+    # The Triangle and Circle image have some stuff at the bottom we need to cut of,
+    #img_orginal = img[0:870, :]  ## cut off the bottom manual at this moment
 
+    # prepare for region labeling
+    img_b = cv2.medianBlur(img, 7)
+    thresh = auto_thresh(img_b)
+    kernel = np.ones((7, 7), np.uint8)
+    threshDil = cv2.dilate(thresh, kernel, iterations=2)
 
-    return 
+    # 255 to 1 since floodfill is expecting that
+    threshDilBin = threshDil.copy()
+    threshDilBin[threshDilBin == 255] = 1
+    threshDilBin = threshDilBin.astype('uint16')
 
+    return threshDilBin
+
+def segmenting(img, zones):
+    array = []
+    height, width = np.shape(img)
+    ## storing the image coords in a vector
+    for i in zones:
+        y2 = i[0]
+        y1 = i[1]
+        x2 = i[2]
+        x1 = i[3]
+        if (x1 > 0 and y1 > 0 and x2 < width - 1 and y2 < height - 1):
+            array.append(img[y1:y2, x1:x2])## the clusters are now in a vector
+    return array
+
+def pre_conditioning(img):
+    padw=3
+    i=np.pad(img, ((padw, padw), (padw, padw)), 'constant')
+
+    img_contrast = auto_contrast256(i)  # This does not matter that much for the circles but improves the lines
+    img_thresholded = auto_thresh(img_contrast)  # Auto thresholding would prob be better.
+    img_edges, Phi, IDx, IDy = detect_edges(img_thresholded, Filter='Prewitt')
+    return img_edges, img_thresholded
 
 
 # -------------------------------------------------------------
