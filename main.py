@@ -6,67 +6,10 @@ import math
 import time
 
 
-def FloodFillLabeling_modified(imgBIN):
-    label = 2
-    # collect the non-zero / foreground elements:
-    nzi = np.nonzero(imgBIN)
-    # make copy:
-    IMG = deepcopy(imgBIN)
-
-    zones = []
-    # Flood fill loop:
-    # for cnt, u in enumerate(FGu):
-    for i in np.transpose(nzi):
-        IMG, zone = FloodFill_BF_modified(IMG, i[0], i[1], label)
-        if (not zone[0] == 0) and (not zone[1] == IMG.shape[0]) and (not zone[2] == 0) and (
-                not zone[3] == IMG.shape[1]):
-            zones.append(zone)
-            label = label + 1
-    return IMG, zones
-
-
-# insert image, (u,v) (start pixel), label nr
-def FloodFill_BF_modified(IMG, u, v, label):
-    '''
-    Breadth-First Version (we treat lists as queues)
-    '''
-    xmax = 0
-    xmin = IMG.shape[0]
-    ymax = 0
-    ymin = IMG.shape[1]
-    S = []
-    S.append([u, v])
-    while S:  # While S is not empty...
-        xy = S[0]
-        x = xy[0]
-        y = xy[1]
-        S.pop(0)
-        if x <= IMG.shape[0] and y <= IMG.shape[1] and IMG[x, y] == 1:
-            if xmax < x:
-                xmax = x
-            elif xmin > x:
-                xmin = x
-            if ymax < y:
-                ymax = y
-            elif ymin > y:
-                ymin = y
-            IMG[x, y] = label
-            if x + 1 < IMG.shape[0]:
-                S.append([x + 1, y])
-            if y + 1 < IMG.shape[1]:
-                S.append([x, y + 1])
-            if y - 1 >= 0:
-                S.append([x, y - 1])
-            if x - 1 >= 0:
-                S.append([x - 1, y])
-    return IMG, [xmax, xmin, ymax, ymin]
-
-
 if __name__ == '__main__':
 
-    # img_all_types_big = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif',
-                         # './pictures/big_triangles_orginal.png']
-    img_all_types_big = ['./pictures/big_lines_orginal.tif']# ["./pictures/big_triangles_orginal.png"]#
+    img_all_types_big = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
+    #img_all_types_big = ['./pictures/big_lines_orginal.tif']# ["./pictures/big_triangles_orginal.png"]#
     img_all_types_small = ['./pictures/simp_line_1.PNG', './pictures/simp_triangle_1.PNG',
                            './pictures/simp_circle_1.PNG']
     img_triangles = ['./pictures/simp_triangle_1.PNG', './pictures/simp_triangle_2.PNG']
@@ -174,7 +117,8 @@ if __name__ == '__main__':
             # Ath the OIP21 library has to be altered so that the data type is Uint8 and not Float64
 
             # Try to detect circles in the image
-            img_circles = cv2.cvtColor(img_edges, cv2.COLOR_GRAY2BGR)
+            #img_circles = cv2.cvtColor(img_edges, cv2.COLOR_GRAY2BGR)
+            #img_circles = cv2.cvtColor(watershed_img, cv2.COLOR_GRAY2BGR)
 
             circles = cv2.HoughCircles(img_edges,
                                        # HoughCircles only works with unit8 so just typecasting it for simplicity
@@ -194,21 +138,23 @@ if __name__ == '__main__':
             try:
                 if circles.any():
                     circles = np.uint16(np.around(circles))
+                    currenctCircles = 0
                     for i in circles[0, :]:
-
                         # painting the circles onto the image
                         center = (i[0], i[1])
                         # circle center
-                        cv2.circle(img_circles, center, 1, (0, 100, 100), 3)
+                        cv2.circle(watershed_img, center, 1, (0, 100, 100), 3)
                         # circle outline
                         radius = i[2]
-                        cv2.circle(img_circles, center, radius, (255, 0, 255), 3)
+                        cv2.circle(watershed_img, center, radius, (255, 0, 255), 3)
                         # end of image painting
                         numberOfCircles = numberOfCircles + 1
                         totalNumberOfCircles = totalNumberOfCircles + 1
+                        currenctCircles = currenctCircles +1
+                    print("Hough line thing : ",currenctCircles," Watershed circles : ", c)
             except:
                 circleArray.append([0, 0, 0])  # do we need to keep track of indivitual clusters?
-
+      
             # ------------------------------------
             # ------------------------------------
             # line Detection : Hough lines
@@ -257,8 +203,8 @@ if __name__ == '__main__':
             # to show circles in clusters
 
             plt.subplot(size, size, count)
-            plt.imshow(watershed_img, cmap=plt.cm.nipy_spectral)
-            # plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
+            #plt.imshow(img_circles, cmap=plt.cm.nipy_spectral)
+            plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
             plt.xticks([])
             plt.yticks([])
             count += 1
@@ -280,8 +226,10 @@ if __name__ == '__main__':
         print(x)
         print("Number of Clusters : ")
         print(numberOfClusters)
-        print("Number of Circles in clusters : ")
+        print("Number of Circles in clusters with Hough Line detect : ")
         print(numberOfCircles)
+        print("Number of particles in clusters with watersheading : ")
+        #print()
         # for b in circleArray:
         # print(np.size(b)/3)             # Still get 0 as 1 so have to implement this better but this print the number of circles in each cluster
         print("Number of Lines in clusters : ")

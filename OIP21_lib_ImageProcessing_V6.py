@@ -64,6 +64,66 @@ from tkinter.filedialog import askopenfilename
 from skimage.feature import peak_local_max
 from skimage.segmentation import watershed
 
+# Modified stuff 
+def FloodFillLabeling_modified(imgBIN):
+    label = 2
+    # collect the non-zero / foreground elements:
+    nzi = np.nonzero(imgBIN)
+    # make copy:
+    IMG = deepcopy(imgBIN)
+
+    zones = []
+    # Flood fill loop:
+    # for cnt, u in enumerate(FGu):
+    for i in np.transpose(nzi):
+        IMG, zone = FloodFill_BF_modified(IMG, i[0], i[1], label)
+        if (not zone[0] == 0) and (not zone[1] == IMG.shape[0]) and (not zone[2] == 0) and (
+                not zone[3] == IMG.shape[1]):
+            zones.append(zone)
+            label = label + 1
+    return IMG, zones
+
+
+# insert image, (u,v) (start pixel), label nr
+def FloodFill_BF_modified(IMG, u, v, label):
+    '''
+    Breadth-First Version (we treat lists as queues)
+    '''
+    xmax = 0
+    xmin = IMG.shape[0]
+    ymax = 0
+    ymin = IMG.shape[1]
+    S = []
+    S.append([u, v])
+    while S:  # While S is not empty...
+        xy = S[0]
+        x = xy[0]
+        y = xy[1]
+        S.pop(0)
+        if x <= IMG.shape[0] and y <= IMG.shape[1] and IMG[x, y] == 1:
+            if xmax < x:
+                xmax = x
+            elif xmin > x:
+                xmin = x
+            if ymax < y:
+                ymax = y
+            elif ymin > y:
+                ymin = y
+            IMG[x, y] = label
+            if x + 1 < IMG.shape[0]:
+                S.append([x + 1, y])
+            if y + 1 < IMG.shape[1]:
+                S.append([x, y + 1])
+            if y - 1 >= 0:
+                S.append([x, y - 1])
+            if x - 1 >= 0:
+                S.append([x - 1, y])
+    return IMG, [xmax, xmin, ymax, ymin]
+
+
+
+
+
 
 def load_image(imgURL):
     ''' This function loads an image '''
