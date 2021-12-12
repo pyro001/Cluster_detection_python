@@ -12,12 +12,11 @@ if __name__ == '__main__':
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
     totalNumberOfCircles = 0  # from hough transform
-    totalNumberOfLines = 0  # hough lines
-    totalNumberOfTriangles = 0  # hough lines triangle detections ?
 
     totalTime = 0
     shortestTime = 900000000
     longestTime = 0
+
     shortestPicture = 'asd'
     longestPicture = 'asd'
     circlePicture = 'asd'
@@ -55,29 +54,51 @@ if __name__ == '__main__':
 
             watershed_img, c = locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresh)
             watershed_clusters.append(c)
+            circles = openCv_HoughCircles(img_edge, 12, 6, 12)
 
-            # Ath the OIP21 library has to be altered so that the data type is Uint8 and not Float64
-            circles = cv2.HoughCircles(img_edge,
-                                       # HoughCircles only works with unit8 so just typecasting it for simplicity
-                                       # image
-                                       cv2.HOUGH_GRADIENT,  # Method   /bTODO ::: look at this
-                                       1,  # dp inverse resolution (1 = max)/bTODO ::: look at this
-                                       8,  # minDist, approximation of the max radius which makes sense
-                                       param1=50,  # Threshold
-                                       param2=12, # #:: 12 best tolerance of the algorithm how many points on the circle the
-                                       # algo needs to make an image The lower this is the more false positives and
-                                       # the higher it is it does not detect at all
-                                       minRadius=6,  # Minimum Radius :: generated Circle radius control
-                                       maxRadius=12  # Maximum Radius
-                                       )
-
-            # The whole drawing lines is not needed and mainly just to make things easier to see.
             if circles is not None:
                 for i in circles[0, :]:
                     numberOfCircles = numberOfCircles + 1
 
 
-      
+#-------------------------------------
+
+
+
+
+
+
+
+            N, M = img_edge.shape
+            if numberOfCircles < 3: 
+
+                Nth = (np.floor_divide(M,2)).astype(np.uint8) # number of THETA values in the accumulator array
+                Nr = (np.floor_divide(N,2)).astype(np.uint8)  # number of R values in the accumulator array
+                K = 30
+
+
+                Acc, MaxIDX, MaxTH, MaxR = hough_lines(img_edge, Nth, Nr, K)
+
+
+
+                #MaxTH, MaxR = filter_lines(MaxTH, MaxR, 1, 10)
+
+                if K > len(MaxTH): K = len(MaxTH)
+
+                avg_angles = []
+                for line in range(K):
+                    #oip.plot_line_rth(E, MaxTH[i], MaxR[i], ax)
+                    #plot_line_rth(M, N, MaxR[line], MaxTH[line], output_axs[count-1])
+
+                    avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
+
+                avg_angle = np.average(avg_angles)
+                #avg_angle = np.sum(avg_angles)/K
+                print("AVERAGE ANGLE")
+                print(avg_angle)
+
+# --------------------------------
+
             # Principal component analasys 
             if (numberOfCircles/np.sum(watershed_clusters)) >= 0.9: 
                 #print("This is probably a circle!")
@@ -88,22 +109,12 @@ if __name__ == '__main__':
                 if (numberOfCircles/np.sum(watershed_clusters)) >= 0.40: 
                     #print("This is probably a Triangle!")
                     numberOfTriangles = numberOfTriangles + c
-                    totalNumberOfTriangles = totalNumberOfTriangles + c
                     trianglePicture = x
                     trianglesClusters = numberOfClusters
                 else : 
                     linePicture = x
                     lineClusters = numberOfClusters
-                    #print("This is probably a Rod!")
-                    # ------------------------------------
-                    # ------------------------------------
-                    # line Detection : Hough lines
-                    # ------------------------------------
-                    # ------------------------------------
-
                     # Try to detect lines in the image
-                    img_lines = cv2.cvtColor(img_edge, cv2.COLOR_GRAY2BGR)
-                    img_lines_prob = np.copy(img_lines)
 
                     lines = cv2.HoughLines(img_edge,  # Image
                                         1,  # Lines
@@ -115,17 +126,7 @@ if __name__ == '__main__':
 
                     if lines is not None:
                         for i in range(0, len(lines)):
-                            rho = lines[i][0][0]
-                            theta = lines[i][0][1]
-                            a = math.cos(theta)
-                            b = math.sin(theta)
-                            x0 = a * rho
-                            y0 = b * rho
-                            pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
-                            pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
-                            cv2.line(img_lines, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
                             numberOfLine = numberOfLine + 1
-                            totalNumberOfLines = totalNumberOfLines + 1
 
 
             #plt.subplot(size, size, count)
@@ -185,18 +186,18 @@ if __name__ == '__main__':
     print("Number of Clusters in picture")
     print(lineClusters)
     print("Number of Lines in picture : ")
-    print(totalNumberOfLines)
+    print(numberOfLine)
     print("Average number of lines in clusters : ")
-    print(totalNumberOfLines / lineClusters)              
+    print(numberOfLine / lineClusters)              
 
     print("\n\nPicture with most ammount of Triangles : ")
     print(trianglePicture)
     print("Numver of Clusters in picture")
     print(trianglesClusters)
     print("Number of Triangles in clusters : ")
-    print(totalNumberOfTriangles)
+    print(numberOfTriangles)
     print("Average number of Triangles in clusters : ")            
-    print(totalNumberOfTriangles / trianglesClusters)
+    print(numberOfTriangles / trianglesClusters)
 
     print("\n\n------------------------ Time Stuff ------------------")
     print("Tottal run time : ")

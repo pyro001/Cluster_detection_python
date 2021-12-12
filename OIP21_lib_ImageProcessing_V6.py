@@ -66,6 +66,12 @@ from skimage.segmentation import watershed
 
 # ----------------------------------------------------------
 # Modified stuff 
+
+
+
+
+
+
 def FloodFillLabeling_modified(imgBIN):
     label = 2
     # collect the non-zero / foreground elements:
@@ -160,6 +166,21 @@ def pre_conditioning(img):
     img_edges, Phi, IDx, IDy = detect_edges(img_thresholded, Filter='Prewitt')
     return img_edges, img_thresholded
 
+def openCv_HoughCircles(img, tolerance, minRadius, maxRadius):
+    circles = cv2.HoughCircles(img,
+    # HoughCircles only works with unit8 so just typecasting it for simplicity
+    # image
+    cv2.HOUGH_GRADIENT,  # Method   /bTODO ::: look at this
+    1,  # dp inverse resolution (1 = max)/bTODO ::: look at this
+    8,  # minDist, approximation of the max radius which makes sense
+    param1=50,  # Threshold
+    param2=tolerance, # #:: 12 best tolerance of the algorithm how many points on the circle the
+    # algo needs to make an image The lower this is the more false positives and
+    # the higher it is it does not detect at all
+    minRadius=minRadius,  # Minimum Radius :: generated Circle radius control
+    maxRadius=maxRadius  # Maximum Radius
+    )
+    return circles
 
 # -------------------------------------------------------------
 
