@@ -132,7 +132,7 @@ if __name__ == '__main__':
                                        1,  # dp inverse resolution (1 = max)/bTODO ::: look at this
                                        8,  # minDist, approximation of the max radius which makes sense
                                        param1=50,  # Threshold
-                                       param2=15, # #:: tolerance of the algorithm how many points on the circle the
+                                       param2=12, # #:: tolerance of the algorithm how many points on the circle the
                                        # algo needs to make an image The lower this is the more false positives and
                                        # the higher it is it does not detect at all
                                        minRadius=6,  # Minimum Radius :: generated Circle radius control
@@ -157,27 +157,17 @@ if __name__ == '__main__':
                         totalNumberOfCircles = totalNumberOfCircles + 1
                         #currenctCircles = currenctCircles +1
                     #print("Hough line thing : ",currenctCircles," Watershed circles : ", c)
-                    
+
             except:
                 circleArray.append([0, 0, 0])  # do we need to keep track of indivitual clusters?
       
             if (numberOfCircles/np.sum(watershed_clusters)) >= 0.9: 
                 print("This is probably a circle!")
             else :
-                if (numberOfCircles/np.sum(watershed_clusters)) >= 0.05: 
+                if (numberOfCircles/np.sum(watershed_clusters)) >= 0.40: 
                     print("This is probably a Triangle!")
-                    # ------------------------------------
-                    # ------------------------------------
-                    # Triangles : ??
-                    # ------------------------------------
-                    # ------------------------------------
-
-                    # Triangle stuff
-                    triangles = None
-
-                    if triangles is not None:
-                        numberOfTriangles = numberOfTriangles + 1
-                        totalNumberOfTriangles = totalNumberOfTriangles + 1
+                    numberOfTriangles = numberOfTriangles + c
+                    totalNumberOfTriangles = totalNumberOfTriangles + c
                 else : 
                     print("This is probably a Rod!")
                     # ------------------------------------
