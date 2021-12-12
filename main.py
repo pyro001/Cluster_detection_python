@@ -44,6 +44,9 @@ if __name__ == '__main__':
     longestTime = 0
     shortestPicture = 'asd'
     longestPicture = 'asd'
+    circlePicture = 'asd'
+    linePicture = 'asd'
+    trianglePicture = 'asd'
 
     for x in img_all_types_big:  ## loop through all the images images stored in a vector
 
@@ -60,8 +63,8 @@ if __name__ == '__main__':
         img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
 
         # The Triangle and Circle image have some stuff at the bottom we need to cut of,
-
         img_orginal = img_orginal[0:870, :]  ## cut off the bottom manual at this moment
+
         # :: automate this// feed it based  on the sample image
         # ------------------------------------
         # ------------------------------------
@@ -94,37 +97,23 @@ if __name__ == '__main__':
 
         size = math.ceil(math.sqrt(len(clusterArray)))
         count = 1
-        ####################################################################
+
         watershed_clusters=[]
-
-
-
-
-
         for i in clusterArray:
+            # Padding for biasing the threshholding            
             padw=3
             i=np.pad(i, ((padw, padw), (padw, padw)), 'constant')
+
             numberOfClusters = numberOfClusters + 1
             totalNumberOfClusters = totalNumberOfClusters + 1
-            # Filter the cluster and then do edge detect before trying to see
-            # if the cluster is a cluster of circles, lines or hopefully triangles.
 
             img_contrast = auto_contrast256(i)  # This does not matter that much for the circles but improves the lines
             img_thresholded = auto_thresh(img_contrast)  # Auto thresholding would prob be better.
-            # ret,thresh = cv2.threshold(img,50,255,cv2.THRESH_BINARY) # Better threshholding?
             watershed_img,c= locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresholded)
             watershed_clusters.append(c)
-            # except Exception as Error:
-            #     watershed_img=i
-            #     print(Error)
             img_edges, Phi, IDx, IDy = detect_edges(img_thresholded, Filter='Prewitt')
 
             # Ath the OIP21 library has to be altered so that the data type is Uint8 and not Float64
-
-            # Try to detect circles in the image
-            #img_circles = cv2.cvtColor(img_edges, cv2.COLOR_GRAY2BGR)
-            #img_circles = cv2.cvtColor(watershed_img, cv2.COLOR_GRAY2BGR)
-
             circles = cv2.HoughCircles(img_edges,
                                        # HoughCircles only works with unit8 so just typecasting it for simplicity
                                        # image
@@ -132,7 +121,7 @@ if __name__ == '__main__':
                                        1,  # dp inverse resolution (1 = max)/bTODO ::: look at this
                                        8,  # minDist, approximation of the max radius which makes sense
                                        param1=50,  # Threshold
-                                       param2=12, # #:: tolerance of the algorithm how many points on the circle the
+                                       param2=12, # #:: 12 best tolerance of the algorithm how many points on the circle the
                                        # algo needs to make an image The lower this is the more false positives and
                                        # the higher it is it does not detect at all
                                        minRadius=6,  # Minimum Radius :: generated Circle radius control
@@ -140,36 +129,39 @@ if __name__ == '__main__':
                                        )
 
             # The whole drawing lines is not needed and mainly just to make things easier to see.
-            try:
-                if circles.any():
-                    circles = np.uint16(np.around(circles))
+            if circles is not None:
+                circles = np.uint16(np.around(circles))
                     #currenctCircles = 0
-                    for i in circles[0, :]:
+                for i in circles[0, :]:
                         # painting the circles onto the image
-                        center = (i[0], i[1])
+                    center = (i[0], i[1])
                         # circle center
-                        cv2.circle(watershed_img, center, 1, (0, 100, 100), 3)
+                    cv2.circle(watershed_img, center, 1, (0, 100, 100), 3)
                         # circle outline
-                        radius = i[2]
-                        cv2.circle(watershed_img, center, radius, (255, 0, 255), 3)
+                    radius = i[2]
+                    cv2.circle(watershed_img, center, radius, (255, 0, 255), 3)
                         # end of image painting
-                        numberOfCircles = numberOfCircles + 1
-                        totalNumberOfCircles = totalNumberOfCircles + 1
-                        #currenctCircles = currenctCircles +1
-                    #print("Hough line thing : ",currenctCircles," Watershed circles : ", c)
+                    numberOfCircles = numberOfCircles + 1
 
-            except:
-                circleArray.append([0, 0, 0])  # do we need to keep track of indivitual clusters?
+
       
+            # Principal component analasys 
             if (numberOfCircles/np.sum(watershed_clusters)) >= 0.9: 
-                print("This is probably a circle!")
+                #print("This is probably a circle!")
+                totalNumberOfCircles = numberOfCircles
+                circlePicture = x
+                circleClusters = numberOfClusters
             else :
                 if (numberOfCircles/np.sum(watershed_clusters)) >= 0.40: 
-                    print("This is probably a Triangle!")
+                    #print("This is probably a Triangle!")
                     numberOfTriangles = numberOfTriangles + c
                     totalNumberOfTriangles = totalNumberOfTriangles + c
+                    trianglePicture = x
+                    trianglesClusters = numberOfClusters
                 else : 
-                    print("This is probably a Rod!")
+                    linePicture = x
+                    lineClusters = numberOfClusters
+                    #print("This is probably a Rod!")
                     # ------------------------------------
                     # ------------------------------------
                     # line Detection : Hough lines
@@ -229,14 +221,12 @@ if __name__ == '__main__':
         print(x)
         print("Number of Clusters : ")
         print(numberOfClusters)
+        print("Particles vs Circles ratio : ")
+        print(numberOfCircles/np.sum(watershed_clusters))
         print("Number of Circles in clusters with Hough Line detect : ")
         print(numberOfCircles)
         print("Number of particles in clusters with watersheading : ")
         print(np.sum(watershed_clusters))
-        print("Particles vs Circles ratio : ")
-        print(numberOfCircles/np.sum(watershed_clusters))
-        # for b in circleArray:
-        # print(np.size(b)/3)             # Still get 0 as 1 so have to implement this better but this print the number of circles in each cluster
         print("Number of Lines in clusters : ")
         print(numberOfLine)
         print("Number of Triangles in clusters : ")
@@ -248,19 +238,35 @@ if __name__ == '__main__':
         plt.show()
 
     print("------------------------ Data Stuff ------------------\n\n")
-    print("Number of Clusters : ")
+    print("Total number of Clusters : ")
     print(totalNumberOfClusters)
-    print("\nNumber of Circles in clusters : ")
+    
+    print("\n\nPicture with most ammount of Circles : ")
+    print(circlePicture)
+    print("Number of Clusters in picture")
+    print(circleClusters)
+    print("Number of Circles in picture : ")
     print(totalNumberOfCircles)
-    print("Average number of circles in clusters : ")
-    print(totalNumberOfCircles / totalNumberOfClusters)
-    print("\nNumber of Lines in clusters : ")
+    print("Average number of circles in clusters : ")              
+    print(totalNumberOfCircles / circleClusters)
+    
+    print("\n\nPicture with most ammout of lines")
+    print(linePicture)
+    print("Number of Clusters in picture")
+    print(lineClusters)
+    print("Number of Lines in picture : ")
     print(totalNumberOfLines)
     print("Average number of lines in clusters : ")
-    print(totalNumberOfLines / totalNumberOfClusters)
-    print("\nNumber of Triangles in clusters : ")
-    print("Average number of Triangles in clusters : ")
-    print(totalNumberOfTriangles / totalNumberOfClusters)
+    print(totalNumberOfLines / lineClusters)              
+
+    print("\n\nPicture with most ammount of Triangles : ")
+    print(trianglePicture)
+    print("Numver of Clusters in picture")
+    print(trianglesClusters)
+    print("Number of Triangles in clusters : ")
+    print(totalNumberOfTriangles)
+    print("Average number of Triangles in clusters : ")            
+    print(totalNumberOfTriangles / trianglesClusters)
 
     print("\n\n------------------------ Time Stuff ------------------")
     print("Tottal compile time : ")
