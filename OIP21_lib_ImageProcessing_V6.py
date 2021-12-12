@@ -1443,7 +1443,7 @@ def locwatershed(img, thresh2, padw=4):
     markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
     labels = watershed(-D, markers, mask=thresh2)
 
-    print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
+    #print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
     for label in np.unique(labels):
         # if the label is zero, we are examining the 'background'
         # so simply ignore it

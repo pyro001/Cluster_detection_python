@@ -96,6 +96,11 @@ if __name__ == '__main__':
         count = 1
         ####################################################################
         watershed_clusters=[]
+
+
+
+
+
         for i in clusterArray:
             padw=3
             i=np.pad(i, ((padw, padw), (padw, padw)), 'constant')
@@ -138,7 +143,7 @@ if __name__ == '__main__':
             try:
                 if circles.any():
                     circles = np.uint16(np.around(circles))
-                    currenctCircles = 0
+                    #currenctCircles = 0
                     for i in circles[0, :]:
                         # painting the circles onto the image
                         center = (i[0], i[1])
@@ -150,55 +155,63 @@ if __name__ == '__main__':
                         # end of image painting
                         numberOfCircles = numberOfCircles + 1
                         totalNumberOfCircles = totalNumberOfCircles + 1
-                        currenctCircles = currenctCircles +1
-                    print("Hough line thing : ",currenctCircles," Watershed circles : ", c)
+                        #currenctCircles = currenctCircles +1
+                    #print("Hough line thing : ",currenctCircles," Watershed circles : ", c)
+                    
             except:
                 circleArray.append([0, 0, 0])  # do we need to keep track of indivitual clusters?
       
-            # ------------------------------------
-            # ------------------------------------
-            # line Detection : Hough lines
-            # ------------------------------------
-            # ------------------------------------
+            if (numberOfCircles/np.sum(watershed_clusters)) >= 0.9: 
+                print("This is probably a circle!")
+            else :
+                if (numberOfCircles/np.sum(watershed_clusters)) >= 0.05: 
+                    print("This is probably a Triangle!")
+                    # ------------------------------------
+                    # ------------------------------------
+                    # Triangles : ??
+                    # ------------------------------------
+                    # ------------------------------------
 
-            # Try to detect lines in the image
-            img_lines = cv2.cvtColor(img_edges, cv2.COLOR_GRAY2BGR)
-            img_lines_prob = np.copy(img_lines)
+                    # Triangle stuff
+                    triangles = None
 
-            lines = cv2.HoughLines(img_edges,  # Image
-                                   1,  # Lines
-                                   np.pi / 180,  # Rho
-                                   40,  # Theta
-                                   None,  # Srn / Stn
-                                   40,  # min_Theta
-                                   70)  # Max_Theta
+                    if triangles is not None:
+                        numberOfTriangles = numberOfTriangles + 1
+                        totalNumberOfTriangles = totalNumberOfTriangles + 1
+                else : 
+                    print("This is probably a Rod!")
+                    # ------------------------------------
+                    # ------------------------------------
+                    # line Detection : Hough lines
+                    # ------------------------------------
+                    # ------------------------------------
 
-            if lines is not None:
-                for i in range(0, len(lines)):
-                    rho = lines[i][0][0]
-                    theta = lines[i][0][1]
-                    a = math.cos(theta)
-                    b = math.sin(theta)
-                    x0 = a * rho
-                    y0 = b * rho
-                    pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
-                    pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
-                    cv2.line(img_lines, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
-                    numberOfLine = numberOfLine + 1
-                    totalNumberOfLines = totalNumberOfLines + 1
+                    # Try to detect lines in the image
+                    img_lines = cv2.cvtColor(img_edges, cv2.COLOR_GRAY2BGR)
+                    img_lines_prob = np.copy(img_lines)
 
-            # ------------------------------------
-            # ------------------------------------
-            # Triangles : ??
-            # ------------------------------------
-            # ------------------------------------
+                    lines = cv2.HoughLines(img_edges,  # Image
+                                        1,  # Lines
+                                        np.pi / 180,  # Rho
+                                        40,  # Theta
+                                        None,  # Srn / Stn
+                                        40,  # min_Theta
+                                        70)  # Max_Theta
 
-            # Triangle stuff
-            triangles = None
+                    if lines is not None:
+                        for i in range(0, len(lines)):
+                            rho = lines[i][0][0]
+                            theta = lines[i][0][1]
+                            a = math.cos(theta)
+                            b = math.sin(theta)
+                            x0 = a * rho
+                            y0 = b * rho
+                            pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
+                            pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
+                            cv2.line(img_lines, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
+                            numberOfLine = numberOfLine + 1
+                            totalNumberOfLines = totalNumberOfLines + 1
 
-            if triangles is not None:
-                numberOfTriangles = numberOfTriangles + 1
-                totalNumberOfTriangles = totalNumberOfTriangles + 1
 
             # to show circles in clusters
 
@@ -229,7 +242,9 @@ if __name__ == '__main__':
         print("Number of Circles in clusters with Hough Line detect : ")
         print(numberOfCircles)
         print("Number of particles in clusters with watersheading : ")
-        #print()
+        print(np.sum(watershed_clusters))
+        print("Particles vs Circles ratio : ")
+        print(numberOfCircles/np.sum(watershed_clusters))
         # for b in circleArray:
         # print(np.size(b)/3)             # Still get 0 as 1 so have to implement this better but this print the number of circles in each cluster
         print("Number of Lines in clusters : ")
