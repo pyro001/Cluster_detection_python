@@ -4,6 +4,9 @@ from OIP21_lib_ImageProcessing_V6 import *
 import cv2  # Some of the things in other library took to long
 import math
 import time
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.rcParams['interactive'] == True
 
 if __name__ == '__main__':
     #img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
@@ -51,12 +54,16 @@ if __name__ == '__main__':
         count_b = 1
 
         t = time.time()
-
+        rodsCount = 0
         for i in clusterArray:
-
+            count += 1
             lines, numberOfLines = countRods(i)
-
+            print(numberOfLines)
+            rodsCount += numberOfLines
+            plt.imshow(lines,'gray',vmin=0,vmax=255)
+            plt.show()
         elapse = time.time() - t
+        print(rodsCount/len(clusterArray))
         print(elapse)
 
 

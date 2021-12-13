@@ -55,6 +55,7 @@ from scipy.signal import convolve2d
 from copy import copy, deepcopy
 import math
 
+
 # tkinter interface module for GUI dialogues (so far only for file opening):
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
@@ -79,13 +80,15 @@ def skeletonize(img):
     skel[:, :] = 0
     kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (2, 2))
     x = cv2.countNonZero(img)
+    count = 1
     while True:
         eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, kernel)
         temp = cv2.morphologyEx(eroded, cv2.MORPH_DILATE, kernel)
         temp = cv2.subtract(img, temp)
         skel = cv2.bitwise_or(skel, temp)
         img[:, :] = eroded[:, :]
-        if cv2.countNonZero(img) <= 0:
+        count += 1
+        if cv2.countNonZero(img) <= 0 or  count >=10:
             break
 
     return skel
@@ -107,27 +110,24 @@ def countRods(i):
     img_blur = cv2.blur(img, (5,5))
     ret,mask = cv2.threshold(img_blur,20,255,cv2.THRESH_BINARY)
     img_noise = cv2.bitwise_and(img,img,mask=mask)
+
     #apply mexican hat twice
     kernel = np.array([[-1,-1,-1], [-1,10,-1], [-1,-1,-1]])
     img_hat1 = cv2.filter2D(img_noise, -1, kernel)
     img_hat2 = cv2.filter2D(img_hat1, -1, kernel)
 
+
     #theshold
     thresh = auto_thresh(img_hat2)
     #thinning
     #thinned_zhang = cv2.ximgproc.thinning(thresh,thinningType = cv2.ximgproc.THINNING_ZHANGSUEN )
-    
-    thinned_zhang = skeletonize(thresh)
 
-    plt.subplot(2,3,3)
-    plt.imshow(thinned_zhang,'gray',vmin=0,vmax=255)
-    plt.gca().set_title('Circles Image')
-    #plt.show()
+    thinned_zhang = skeletonize(thresh)
 
     #thinned_zhang = thresh
     
     #find lines
-    lines = cv2.HoughLines(thinned_zhang,1,(1*np.pi)/180,11)
+    lines = cv2.HoughLines(thinned_zhang,1,(1*np.pi)/180,15)
     img_lines = img.copy()
 
     angleThresh = math.radians(25)
