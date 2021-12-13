@@ -69,6 +69,87 @@ from skimage.segmentation import watershed
 
 
 
+def countRods(i):
+    img = i.copy()
+    #scale the image so i have more pixels to play with
+    scale_percent = 200 # percent of original size
+    width = int(img.shape[1] * scale_percent / 100)
+    height = int(img.shape[0] * scale_percent / 100)
+    dim = (width, height)
+    img = cv2.resize(img, dim) 
+    #blur to make mask to remove everything outside the cluster
+    img_blur = cv2.blur(img, (5,5))
+    ret,mask = cv2.threshold(img_blur,20,255,cv2.THRESH_BINARY)
+    img_noise = cv2.bitwise_and(img,img,mask=mask)
+    #apply mexican hat twice
+    kernel = np.array([[-1,-1,-1], [-1,10,-1], [-1,-1,-1]])
+    img_hat1 = cv2.filter2D(img_noise, -1, kernel)
+    img_hat2 = cv2.filter2D(img_hat1, -1, kernel)
+
+    #theshold
+    thresh = auto_thresh(img_hat2)
+    #thinning
+    thinned_zhang = cv2.ximgproc.thinning(thresh,thinningType = cv2.ximgproc.THINNING_ZHANGSUEN )
+    #find lines
+    lines = cv2.HoughLines(thinned_zhang,1,(1*np.pi)/180,11)
+    img_lines = img.copy()
+
+    angleThresh = math.radians(25)
+
+    if lines is not None:
+        drawLines = []
+        #for every line found
+        for i in range(0, len(lines)):
+            rho = lines[i][0][0]
+            theta = lines[i][0][1]
+            good = True
+            #for every line all ready draw
+            for i in drawLines:
+                mult = 75
+                #calculate endpoints of line
+                a = math.cos(theta)
+                b = math.sin(theta)
+                x0 = a * rho
+                y0 = b * rho
+                x1 = int(x0 + mult*(-b))
+                x2 = int(x0 - mult*(-b))
+                y1 = int(y0 + mult*(a))
+                y2 = int(y0 - mult*(a))
+                #calculate endpoints of lines all ready draw
+                a = math.cos(i[1])
+                b = math.sin(i[1])
+                x0 = a * i[0]
+                y0 = b * i[0]
+                x3 = int(x0 + mult*(-b))
+                x4 = int(x0 - mult*(-b))
+                y3 = int(y0 + mult*(a))
+                y4 = int(y0 - mult*(a))
+
+                try:
+                    #check if the to line segments intersect (in try because /0)
+                    t = ((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4))
+                    u = ((x1-x3)*(y1-y2)-(y1-y3)*(x1-x2))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4))
+                    #check difference in angles taking care of 0-360
+                    a = theta - i[1]
+                    a = ((a + np.pi/2) % (np.pi*1)) - np.pi/2
+                    #if the lines intersect and angle is close togheter then discard the line
+                    if t>=0 and t<=1 and u>=0 and u<=1 and a<angleThresh:
+                        good = False
+                except:
+                    pass
+
+            if good:
+                #save the line
+                drawLines.append([rho,theta])
+                #draw the line on original image
+                a = math.cos(theta)
+                b = math.sin(theta)
+                x0 = a * rho
+                y0 = b * rho
+                pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
+                pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+                cv2.line(img_lines, pt1, pt2, (100,0,0), 1)
+    return img_lines, len(drawLines)
 
 
 
