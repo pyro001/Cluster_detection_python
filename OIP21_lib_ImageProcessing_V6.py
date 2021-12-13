@@ -53,6 +53,7 @@ import numpy as np  # for all kinds of (accelerated) matrix / numerical operatio
 from scipy import ndimage
 from scipy.signal import convolve2d
 from copy import copy, deepcopy
+import math
 
 # tkinter interface module for GUI dialogues (so far only for file opening):
 import tkinter as tk
@@ -67,16 +68,41 @@ from skimage.segmentation import watershed
 # ----------------------------------------------------------
 # Modified stuff 
 
+def skeletonize(img):
+    """ OpenCV function to return a skeletonized version of img, a Mat object"""
+
+    #  hat tip to http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
+
+    img = img.copy()  # don't clobber original
+    skel = img.copy()
+
+    skel[:, :] = 0
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (2, 2))
+    x = cv2.countNonZero(img)
+    while True:
+        eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, kernel)
+        temp = cv2.morphologyEx(eroded, cv2.MORPH_DILATE, kernel)
+        temp = cv2.subtract(img, temp)
+        skel = cv2.bitwise_or(skel, temp)
+        img[:, :] = eroded[:, :]
+        if cv2.countNonZero(img) <= 0:
+            break
+
+    return skel
 
 
 def countRods(i):
     img = i.copy()
     #scale the image so i have more pixels to play with
     scale_percent = 200 # percent of original size
-    width = int(img.shape[1] * scale_percent / 100)
-    height = int(img.shape[0] * scale_percent / 100)
+    width = img.shape[1] * 2
+    height = img.shape[0] * 2
     dim = (width, height)
     img = cv2.resize(img, dim) 
+
+    #l,w = np.shape(img)
+    #img = cv2.resize(img, (w*2, l*2)) 
+
     #blur to make mask to remove everything outside the cluster
     img_blur = cv2.blur(img, (5,5))
     ret,mask = cv2.threshold(img_blur,20,255,cv2.THRESH_BINARY)
@@ -89,7 +115,17 @@ def countRods(i):
     #theshold
     thresh = auto_thresh(img_hat2)
     #thinning
-    thinned_zhang = cv2.ximgproc.thinning(thresh,thinningType = cv2.ximgproc.THINNING_ZHANGSUEN )
+    #thinned_zhang = cv2.ximgproc.thinning(thresh,thinningType = cv2.ximgproc.THINNING_ZHANGSUEN )
+    
+    thinned_zhang = skeletonize(thresh)
+
+    plt.subplot(2,3,3)
+    plt.imshow(thinned_zhang,'gray',vmin=0,vmax=255)
+    plt.gca().set_title('Circles Image')
+    #plt.show()
+
+    #thinned_zhang = thresh
+    
     #find lines
     lines = cv2.HoughLines(thinned_zhang,1,(1*np.pi)/180,11)
     img_lines = img.copy()
@@ -1568,7 +1604,7 @@ def unpad(dens, pad):
     return pdens
 
 
-def locwatershed(img, thresh2, padw=4):
+def locwatershed(img_org, thresh2, padw=4):
     # kernel = np.ones((3, 3), np.uint8)
     # thresh2 = np.pad(thresh2, ((padw, padw), (padw, padw)), 'constant')
 
@@ -1576,6 +1612,7 @@ def locwatershed(img, thresh2, padw=4):
     # thresh2 = cv2.erode(thresh2, kernel, iterations=1)
 
     # print(img.shape)
+    img = img_org.copy()
     D = ndimage.distance_transform_edt(thresh2)
     localMax = peak_local_max(D, indices=False, min_distance=5,
                               labels=thresh2)

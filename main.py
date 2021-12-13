@@ -6,8 +6,8 @@ import math
 import time
 
 if __name__ == '__main__':
-    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
-
+    #img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
+    img_array = ['./pictures/big_lines_orginal.tif']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -46,6 +46,10 @@ if __name__ == '__main__':
 
         clusterArray = segmenting(img_orginal, zones)
 
+        size = math.ceil(math.sqrt(len(clusterArray)))
+        count = 1
+        count_b = 1
+
         for i in clusterArray:
             numberOfClusters = numberOfClusters + 1
             totalNumberOfClusters = totalNumberOfClusters + 1
@@ -59,6 +63,37 @@ if __name__ == '__main__':
             if circles is not None:
                 for i in circles[0, :]:
                     numberOfCircles = numberOfCircles + 1
+
+
+            #-------------------------------------
+            # N, M = img_edge.shape
+            # if numberOfCircles < 3: 
+
+            #     Nth = (np.floor_divide(M,2)).astype(np.uint8) # number of THETA values in the accumulator array
+            #     Nr = (np.floor_divide(N,2)).astype(np.uint8)  # number of R values in the accumulator array
+            #     K = 30
+
+
+            #     Acc, MaxIDX, MaxTH, MaxR = hough_lines(img_edge, Nth, Nr, K)
+
+
+
+            #     #MaxTH, MaxR = filter_lines(MaxTH, MaxR, 1, 10)
+
+            #     if K > len(MaxTH): K = len(MaxTH)
+
+            #     avg_angles = []
+            #     for line in range(K):
+            #         #oip.plot_line_rth(E, MaxTH[i], MaxR[i], ax)
+            #         #plot_line_rth(M, N, MaxR[line], MaxTH[line], output_axs[count-1])
+
+            #         avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
+
+            #     avg_angle = np.average(avg_angles)
+            #     #avg_angle = np.sum(avg_angles)/K
+            #     print("AVERAGE ANGLE")
+            #     print(avg_angle)
+            # --------------------------------
 
             # Principal component analasys 
             if (numberOfCircles/np.sum(watershed_clusters)) >= 0.9: 
@@ -77,24 +112,20 @@ if __name__ == '__main__':
                     lineClusters = numberOfClusters
                     # Try to detect lines in the image
 
-                    lines = cv2.HoughLines(img_edge,  # Image
-                                        1,  # Lines
-                                        np.pi / 180,  # Rho
-                                        40,  # Theta
-                                        None,  # Srn / Stn
-                                        40,  # min_Theta
-                                        70)  # Max_Theta
+                    lines, numberOfLines = countRods(i)
+                    count_b += 1
+                    print(count_b)
 
                     if lines is not None:
                         for i in range(0, len(lines)):
                             numberOfLine = numberOfLine + 1
 
 
-            #plt.subplot(size, size, count)
-            #plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
-            #plt.xticks([])
-            #plt.yticks([])
-            #count += 1
+            plt.subplot(size, size, count)
+            plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
+            plt.xticks([])
+            plt.yticks([])
+            count += 1
 
         # Just gathering some data and stuff, not sure how much is relavant or wanted
         elapse = time.time() - t
