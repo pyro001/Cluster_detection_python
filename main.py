@@ -1,12 +1,15 @@
-# v2 - trying to add Tobias segmentation to it 
+# v2 - trying to add Tobias segmentation to it
+import numpy as np
 from numpy import uint8
+from scipy.interpolate import interp1d
+
 from OIP21_lib_ImageProcessing_V6 import *
 import cv2  # Some of the things in other library took to long
 import math
 import time
 
 if __name__ == '__main__':
-    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
+    img_array = ['./pictures/big_circles_orginal.tif']#, './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
 
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
@@ -29,6 +32,7 @@ if __name__ == '__main__':
         clusterArray = []  # This should maybe be global?
         circleArray = []  # This should also maybe be global?
         watershed_clusters=[]
+        ForegBackg=[]
         numberOfClusters = 0
         numberOfCircles = 0
         numberOfLine = 0
@@ -54,6 +58,8 @@ if __name__ == '__main__':
 
             watershed_img, c = locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresh)
             watershed_clusters.append(c)
+            m,n= np.shape(img_thresh)
+            ForegBackg.append(cv2.countNonZero(img_thresh)/(c) )
             circles = openCv_HoughCircles(img_edge, 12, 6, 12)
 
             if circles is not None:
@@ -93,9 +99,9 @@ if __name__ == '__main__':
                     avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
 
                 avg_angle = np.average(avg_angles)
-                #avg_angle = np.sum(avg_angles)/K
+                    #avg_angle = np.sum(avg_angles)/K
                 print("AVERAGE ANGLE")
-                print(avg_angle)
+                print(avg_angle*180/np.pi)
 
 # --------------------------------
 
@@ -136,6 +142,20 @@ if __name__ == '__main__':
             #count += 1
 
         # Just gathering some data and stuff, not sure how much is relavant or wanted
+        x = watershed_clusters
+        y=ForegBackg ##normalize the data?
+        n, bins, patches = plt.hist(x, facecolor='blue', alpha=0.5)
+        plt.show()
+        # num_bins = int(np.ceil(max(y) / 20))
+        n, bins, patches = plt.hist(y,  facecolor='red', alpha=0.5)  # A bar chart
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.show()
+
+        # f1 = interp1d(xp, y, kind='cubic')
+        # print(f1)
+
+
         elapse = time.time() - t
         if elapse <= shortestTime:
             shortestTime = elapse
@@ -184,20 +204,20 @@ if __name__ == '__main__':
     print("\n\nPicture with most ammout of lines")
     print(linePicture)
     print("Number of Clusters in picture")
-    print(lineClusters)
+    # print(lineClusters) ## not defined
     print("Number of Lines in picture : ")
-    print(numberOfLine)
+    # print(numberOfLine)
     print("Average number of lines in clusters : ")
-    print(numberOfLine / lineClusters)              
+    # print(numberOfLine / lineClusters)
 
     print("\n\nPicture with most ammount of Triangles : ")
     print(trianglePicture)
     print("Numver of Clusters in picture")
-    print(trianglesClusters)
+    # print(trianglesClusters)
     print("Number of Triangles in clusters : ")
-    print(numberOfTriangles)
+    # print(numberOfTriangles)
     print("Average number of Triangles in clusters : ")            
-    print(numberOfTriangles / trianglesClusters)
+    # print(numberOfTriangles / trianglesClusters)
 
     print("\n\n------------------------ Time Stuff ------------------")
     print("Tottal run time : ")
