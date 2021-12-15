@@ -37,9 +37,9 @@ def skeletonize(img):
 
 kernel = np.ones((5, 5), np.uint8)
 if __name__ == '__main__':
-    img = cv2.imread("../pictures/simp_line_1.PNG")
+    img = cv2.imread("../pictures/big_triangles_orginal.png")
     img = img[0:870, 0:870, :]
-    img = cv2.resize(img, (0, 0), fx=2, fy=2)
+    img = cv2.resize(img, (0, 0), fx=1, fy=1)
     # img = cv2.imread("R001_001.tif")
     # img = cv2.imread("001_002.tif")
     # img = cv2.imread("SingleTCell.png")
@@ -54,11 +54,11 @@ if __name__ == '__main__':
     # thresh2 = auto_thresh(gauss_img)
     # gauss_img, phi, idx, idy = detect_edges(thresh)
     kernel = np.ones((3, 3), np.uint8)
-
+    thresh2 = cv2.erode(thresh, kernel, iterations=1)
     # Using cv2.erode() method
 
     # gauss_img, phi, idx, idy = detect_edges(gray)
-    thresh2 = cv2.erode(thresh, kernel, iterations=3)
+    thresh2 = cv2.erode(thresh, kernel, iterations=1)
 
     # thresh2= (gauss_img)
     cv2.imshow('thresh', thresh)
@@ -68,6 +68,12 @@ if __name__ == '__main__':
     localMax = peak_local_max(D, indices=False, min_distance=5,
                               labels=thresh2)
     cv2.imshow("Distance MAp", D)
+    # localMax=  img_dilate(localMax, N4)
+    # localMax = img_dilate(localMax, N4)
+    # localMax = img_dilate(localMax, N4)
+    #
+    # localMax =  pedestrian_filter(localMax,Gauss5)
+    # localMax= auto_thresh(localMax)
 
     # perform a connected component analysis on the local peaks,
     # using 8-connectivity, then apply the Watershed algorithm
@@ -75,7 +81,10 @@ if __name__ == '__main__':
     labels = watershed(-D, markers, mask=thresh2)
     labelarray, particle_count2 = ndimage.label(thresh2)
     print("[INFO] {} unique segments found".format(particle_count2))
-    matplotlib.pyplot.imshow(labels, cmap="rainbow")
+    matplotlib.pyplot.imshow(labels, cmap="jet")
+    filename = "markers.jpg"
+    plt.axis('off')
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
     matplotlib.pyplot.show()
     print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
     img2 = img.copy()
