@@ -304,7 +304,7 @@ def openCv_HoughCircles(img, tolerance, minRadius, maxRadius):
     return circles
 
 
-def locwatershed(img_org, thresh2,modifier=2):
+def locwatershed(img_org, thresh2,modifier=1):
     kernel = np.ones((3, 3), np.uint8)
     thresh2 = cv2.erode(thresh2, kernel, iterations=1)
     minareacircles = []
@@ -344,6 +344,7 @@ def locwatershed(img_org, thresh2,modifier=2):
         minareacircles.append([x, y, r])
         avgr.append(r)
     try:
+        print(avgr)
         # print(np.mean(avgr)-2*np.std(avgr), "\n\n\n")
         Removed = [i for i in minareacircles if i[2] < np.mean(avgr)-modifier*np.std(avgr)]
         # print("::: REmoved DAta:::", len(Removed))
@@ -358,7 +359,7 @@ def locwatershed(img_org, thresh2,modifier=2):
     # cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
     # show the output image
     # print("Comaprison::",len(minareacircles),len(np.unique(labels))-1)
-    return img, len((minareacircles))
+    return thresh2,img, len((minareacircles))
 
 # -------------------------------------------------------------
 

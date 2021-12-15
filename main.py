@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
             img_edge, img_thresh = pre_conditioning(i)
 
-            watershed_img, c = locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresh)
+            img_thresh2,watershed_img, c = locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresh)
             watershed_clusters.append(c)
             m,n= np.shape(img_thresh)
             try:
@@ -84,7 +84,16 @@ if __name__ == '__main__':
                 for i in circles[0, :]:
                     numberOfCircles = numberOfCircles + 1
 
-
+            plt.subplot(2*size, size, count)
+            plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
+            plt.xticks([])
+            plt.yticks([])
+            count += 1
+            plt.subplot(2 * size,  size, count)
+            plt.imshow(img_thresh2, 'gray', vmin=0, vmax=255)
+            plt.xticks([])
+            plt.yticks([])
+            count += 1
             #-------------------------------------
             # N, M = img_edge.shape
             # if numberOfCircles < 3: 
@@ -152,7 +161,7 @@ if __name__ == '__main__':
         x = watershed_clusters
         y=ForegBackg ##normalize the data?
         ##the output looks wierd just take a look
-
+        plt.show()
         n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
         print("n", n,"bins", bins, "patches", patches)
         plt.xlabel('Bins')
