@@ -19,8 +19,8 @@ def power_law(x, a, b):
 
 
 if __name__ == '__main__':
-    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
-    img_array= ['./pictures/T001.png']
+    #img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
+    img_array= ['./pictures/big_triangles_orginal.png']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -29,6 +29,7 @@ if __name__ == '__main__':
     totalTime = 0
     shortestTime = 900000000
     longestTime = 0
+    circleClusters = 0
 
     shortestPicture = 'asd'
     longestPicture = 'asd'
@@ -223,8 +224,9 @@ if __name__ == '__main__':
     print(circleClusters)
     print("Number of Circles in picture : ")
     print(totalNumberOfCircles)
-    print("Average number of circles in clusters : ")              
-    print(totalNumberOfCircles / circleClusters)
+    print("Average number of circles in clusters : ")    
+    if circleClusters != 0:          
+        print(totalNumberOfCircles / circleClusters)
     
     print("\n\nPicture with most ammout of lines")
     print(linePicture)
