@@ -20,7 +20,7 @@ def power_law(x, a, b):
 
 if __name__ == '__main__':
     img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
-
+    img_array= ['./pictures/T001.png']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -150,12 +150,16 @@ if __name__ == '__main__':
         # Just gathering some data and stuff, not sure how much is relavant or wanted
         x = watershed_clusters
         y=ForegBackg ##normalize the data?
-        n, bins, patches = plt.hist(x, facecolor='blue', alpha=0.5)
+        ##the output looks wierd just take a look
+
+        n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
+        print("n", n,"bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
         # num_bins = int(np.ceil(max(y) / 20))
         n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
+        print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
