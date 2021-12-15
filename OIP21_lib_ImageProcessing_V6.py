@@ -304,6 +304,62 @@ def openCv_HoughCircles(img, tolerance, minRadius, maxRadius):
     return circles
 
 
+def locwatershed(img_org, thresh2,modifier=0.6):
+    kernel = np.ones((3, 3), np.uint8)
+    thresh2 = cv2.erode(thresh2, kernel, iterations=1)
+    minareacircles = []
+    avgr=[]
+    # print(img.shape)
+    img = img_org.copy()
+    # print()
+    l, b = np.shape(thresh2)
+    if l < 40 and b < 40:
+        # print("zoom activated", l,b)
+        img = cv2.resize(img, (0, 0), fx=2, fy=2)
+    D = ndimage.distance_transform_edt(thresh2)
+    localMax = peak_local_max(D, indices=False, min_distance=5,
+                              labels=thresh2)
+    # perform a connected component analysis on the local peaks,
+    # using 8-connectivity, then appy the Watershed algorithm
+    markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
+    labels = watershed(-D, markers, mask=thresh2)
+
+    # print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
+    for label in np.unique(labels):
+        # if the label is zero, we are examining the 'background'
+        # so simply ignore it
+        if label == 0:
+            continue
+        # otherwise, allocate memory for the label region and draw
+        # it on the mask
+        mask = np.zeros(thresh2.shape, dtype="uint8")
+        mask[labels == label] = 255
+        # detect contours in the mask and grab the largest one
+        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+                                cv2.CHAIN_APPROX_SIMPLE)
+        cnts = imutils.grab_contours(cnts)
+        c = max(cnts, key=cv2.contourArea)
+        # draw a circle enclosing the object
+        ((x, y), r) = cv2.minEnclosingCircle(c)
+        minareacircles.append([x, y, r])
+        avgr.append(r)
+    try:
+        # print(np.mean(avgr)-2*np.std(avgr), "\n\n\n")
+        Removed = [i for i in minareacircles if i[2] < np.mean(avgr)-1*np.std(avgr)]
+        print("::: REmoved DAta:::", len(Removed))
+        minareacircles = [i for i in minareacircles if i[2] >= np.mean(avgr)-1*np.std(avgr)]
+
+        for l in minareacircles:
+            x, y, z = l
+            cv2.circle(img, (int(x), int(y)), int(r), (0, 255, 0), 1)
+    except Exception as E:
+        print("Error: " ,E ,len(np.unique(labels)))
+    # cv2.putText(image, "#{}".format(label), (int(x) - 10, int(y)),
+    # cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    # show the output image
+    print("Comaprison::",len(minareacircles),len(np.unique(labels))-1)
+    return img, len((minareacircles)) - 1
+
 # -------------------------------------------------------------
 
 
@@ -1592,73 +1648,4 @@ def plot_image_sequence(sequence, title='Intensity Image', cmap='gray', vmax=255
     return fig, ax
 
 
-def unpad(dens, pad):
-    """
-    Input:  dens   -- np.ndarray(shape=(nx,ny,nz))
-            pad    -- np.array(px,py,pz)
 
-    Output: pdens -- np.ndarray(shape=(nx-px,ny-py,nz-pz))
-    """
-
-    nx, ny = dens.shape
-    pdens = dens[2:nx - pad, 2:ny - pad]
-    # pl[2]:nz-pr[2]]
-
-    return pdens
-
-
-def locwatershed(img_org, thresh2,modifier=0.6):
-    kernel = np.ones((3, 3), np.uint8)
-    thresh2 = cv2.erode(thresh2, kernel, iterations=1)
-    minareacircles = []
-    avgr=[]
-    # print(img.shape)
-    img = img_org.copy()
-    # print()
-    l, b = np.shape(thresh2)
-    if l < 40 and b < 40:
-        # print("zoom activated", l,b)
-        img = cv2.resize(img, (0, 0), fx=2, fy=2)
-    D = ndimage.distance_transform_edt(thresh2)
-    localMax = peak_local_max(D, indices=False, min_distance=5,
-                              labels=thresh2)
-    # perform a connected component analysis on the local peaks,
-    # using 8-connectivity, then appy the Watershed algorithm
-    markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
-    labels = watershed(-D, markers, mask=thresh2)
-
-    # print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
-    for label in np.unique(labels):
-        # if the label is zero, we are examining the 'background'
-        # so simply ignore it
-        if label == 0:
-            continue
-        # otherwise, allocate memory for the label region and draw
-        # it on the mask
-        mask = np.zeros(thresh2.shape, dtype="uint8")
-        mask[labels == label] = 255
-        # detect contours in the mask and grab the largest one
-        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-                                cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        c = max(cnts, key=cv2.contourArea)
-        # draw a circle enclosing the object
-        ((x, y), r) = cv2.minEnclosingCircle(c)
-        minareacircles.append([x, y, r])
-        avgr.append(r)
-    try:
-        # print(np.mean(avgr)-2*np.std(avgr), "\n\n\n")
-        Removed = [i for i in minareacircles if i[2] < np.mean(avgr)-2*np.std(avgr)]
-        print("::: REmoved DAta:::", len(Removed))
-        minareacircles = [i for i in minareacircles if i[2] >= np.mean(avgr)-2*np.std(avgr)]
-
-        for l in minareacircles:
-            x, y, z = l
-            cv2.circle(img, (int(x), int(y)), int(r), (0, 255, 0), 1)
-    except Exception:
-        print("Zero DIV: " ,len(np.unique(labels)))
-    # cv2.putText(image, "#{}".format(label), (int(x) - 10, int(y)),
-    # cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-    # show the output image
-    print("Comaprison::",len(minareacircles),len(np.unique(labels))-1)
-    return img, len((minareacircles)) - 1
