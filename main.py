@@ -1,13 +1,26 @@
-# v2 - trying to add Tobias segmentation to it 
+# v2 - trying to add Tobias segmentation to it
+import numpy as np
+import scipy
 from numpy import uint8
+from scipy import interpolate
+from scipy.optimize import curve_fit
+
 from OIP21_lib_ImageProcessing_V6 import *
 import cv2  # Some of the things in other library took to long
 import math
 import time
+def gaussian(x, a, b, c):
+    return a*np.exp(-np.power(x - b, 2)/(2*np.power(c, 2)))
+
+
+
+def power_law(x, a, b):
+    return a * np.power(x, b)
+
 
 if __name__ == '__main__':
-    #img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
-    img_array = ['./pictures/big_lines_orginal.tif']
+    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
+
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -29,6 +42,7 @@ if __name__ == '__main__':
         clusterArray = []  # This should maybe be global?
         circleArray = []  # This should also maybe be global?
         watershed_clusters=[]
+        ForegBackg=[]
         numberOfClusters = 0
         numberOfCircles = 0
         numberOfLine = 0
@@ -58,6 +72,11 @@ if __name__ == '__main__':
 
             watershed_img, c = locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresh)
             watershed_clusters.append(c)
+            m,n= np.shape(img_thresh)
+            try:
+                ForegBackg.append(cv2.countNonZero(img_thresh)/(c) )
+            except ZeroDivisionError:
+                ForegBackg.append(cv2.countNonZero(img_thresh))
             circles = openCv_HoughCircles(img_edge, 12, 6, 12)
 
             if circles is not None:
@@ -109,25 +128,50 @@ if __name__ == '__main__':
                     trianglesClusters = numberOfClusters
                 else : 
                     linePicture = x
-                    lineClusters = numberOfClusters
-                    # Try to detect lines in the image
+                    ##momentarily commented // this is annoyingly slow
+                    # lineClusters = numberOfClusters
+                    # # Try to detect lines in the image
+                    #
+                    # lines, numberOfLines = countRods(i)
+                    # count_b += 1
+                    # print(count_b)
+                    #
+                    # if lines is not None:
+                    #     for i in range(0, len(lines)):
+                    #         numberOfLine = numberOfLine + 1
 
-                    lines, numberOfLines = countRods(i)
-                    count_b += 1
-                    print(count_b)
 
-                    if lines is not None:
-                        for i in range(0, len(lines)):
-                            numberOfLine = numberOfLine + 1
-
-
-            plt.subplot(size, size, count)
-            plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
-            plt.xticks([])
-            plt.yticks([])
-            count += 1
+            # plt.subplot(size, size, count)
+            # plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
+            # plt.xticks([])
+            # plt.yticks([])
+            # count += 1
 
         # Just gathering some data and stuff, not sure how much is relavant or wanted
+        x = watershed_clusters
+        y=ForegBackg ##normalize the data?
+        n, bins, patches = plt.hist(x, facecolor='blue', alpha=0.5)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.show()
+        # num_bins = int(np.ceil(max(y) / 20))
+        n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.show()
+        x = np.linspace(0,450, len(n))
+        xdata = np.linspace(0, 450, 40)
+        fittingFunction, cov = scipy.stats.distributions.norm.fit(y)
+        fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
+        plt.plot(xdata, fitted_data, 'r-')
+        #curve_fit(f=gaussian, xdata=x, ydata=n)
+        # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
+        plt.show()
+        plt.scatter(x, n)
+        # plt.scatter(xdata,))
+        plt.show()
+
+
         elapse = time.time() - t
         if elapse <= shortestTime:
             shortestTime = elapse
@@ -181,25 +225,25 @@ if __name__ == '__main__':
     print("\n\nPicture with most ammout of lines")
     print(linePicture)
     print("Number of Clusters in picture")
-    print(lineClusters)
+    # print(lineClusters) ## not defined
     print("Number of Lines in picture : ")
-    print(numberOfLine)
+    # print(numberOfLine)
     print("Average number of lines in clusters : ")
-    print(numberOfLine / lineClusters)              
+    # print(numberOfLine / lineClusters)
 
     print("\n\nPicture with most ammount of Triangles : ")
     print(trianglePicture)
     print("Numver of Clusters in picture")
-    print(trianglesClusters)
+    # print(trianglesClusters)
     print("Number of Triangles in clusters : ")
-    print(numberOfTriangles)
+    # print(numberOfTriangles)
     print("Average number of Triangles in clusters : ")            
-    print(numberOfTriangles / trianglesClusters)
+    # print(numberOfTriangles / trianglesClusters)
 
-    print("Mean size of a cluster: ", round(np.mean(watershed_clusters),2),
-    " Median size of a cluster: ", round(np.median(watershed_clusters),2), 
-    " Standard deviation of cluster size: ",round(np.std(watershed_clusters),2),
-    " Variance of cluster size: ",round(np.var(watershed_clusters),2))
+    print("Mean number of a cluster particles: ", round(np.mean(watershed_clusters),2),
+    " Median number of a cluster particles: ", round(np.median(watershed_clusters),2),
+    " Standard Deviation of cluster particles: ",round(np.std(watershed_clusters),2),
+    " Variance of cluster particles: ",round(np.var(watershed_clusters),2))
 
     print("\n\n------------------------ Time Stuff ------------------")
     print("Tottal run time : ")
