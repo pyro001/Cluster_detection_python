@@ -6,25 +6,45 @@ from mpl_toolkits.mplot3d import axes3d
 import random as ran
 import matplotlib
 import matplotlib.pyplot as plt
-
-# for non-standard color maps
 import matplotlib.cm as cm
-#for defining functions
-# sympy imports for calculation and nice display: 
 from sympy.interactive.printing import init_printing
 from sympy.matrices import *
 from sympy.plotting import plot3d
 from sympy import *
-init_printing(use_unicode=False, wrap_line=False, no_global=True)
+from scipy.interpolate import interp1d
+from scipy.optimize import minimize
+from numpy.linalg import norm 
 
-from mpl_toolkits.mplot3d import axes3d
+data = np.loadtxt("Experimental_Data_xy.txt", delimiter =',')
 
-# sympy imports for calculation and nice display: 
-from sympy.interactive.printing import init_printing
-from sympy.matrices import *
-from sympy.plotting import plot3d
-from sympy import *
-init_printing(use_unicode=False, wrap_line=False, no_global=True)
+n = 2; # number of particles
+ns = 2; #number of iterations
+c1 = 2; # cognitive coefficient
+c2 = 2; #social coefficient
+om = 0.9; # inertia weight
+k = 1; #velocity restricting constant
+t = 0.2; #animation speed/delay after each iteration
+
+#search range the Ackley function. to test the ackley function
+xmin = -10
+xmax = 10
+ymin = -10
+ymax = 10
+
+#maximum velocity
+vmx = k*(xmax-xmin)/2
+vmy = k*(ymax-ymin)/2
+
+
+# xmin = -3
+# xmax = 3
+# ymin = -6
+# ymax = 6
+
+#  #maximum velocity
+# vmx = k*(xmax-xmin)/2
+# vmy = k*(ymax-ymin)/2
+
 
 def Function(pos):
     '''The Ackley Function (2D-implementation)
@@ -69,100 +89,6 @@ def update_position_testfunction(v,pos):
         new_pos.append(pos[i]+v[i])
     return new_pos
 
-def update_personal_best_testfunction(p_best,Par_Val,pos):
-    for i in range(len(pos)):
-        if ( Par_Val[i] >= Function(p_best[i]) ):
-            p_best[i] = pos[i]
-    return p_best
-
-def update_global_best_testfunction(g_best,Par_Val,pos):
-    for i in range(n):
-        if ( Par_Val[i] >= Function(g_best) ):
-            g_best = pos[i]
-    return g_best
-
-def PSO_testfunction(n,ns,c1,c2,om,k,t,xmin,xmax,ymin,ymax):
-    
-
-    #Step 1a, 
-    #Initializing the Position
-    #pos = []
-    #for i in range(n):
-        #pos.append([ran.randrange(xmin,xmax), ran.randrange(ymin,ymax)])
-    pos = np.array([np.array([ran.randrange(xmin,xmax), ran.randrange(ymin,ymax)]) for i in range(n)])
-    
-    #Step 1b,
-    #Initializing the Particles best position as the initial assumptions
-    p_best = pos
-
-    #Step 1c
-    #Calulating fitness of each particle
-    Par_Val = []
-    for i in range(n-1):
-        Par_Val.append(Function(pos[i])) 
-
-    #Finding the maximum value and then the points that give this maximum value and then setting these points as the new global best
-
-    #indices = [i for i, x in enumerate(Par) if x == max(Par)] #Finds the max value, 
-    #returns the indices of the best position that gives this value
-    global_best_pos_index = (Par_Val.index(max(Par_Val)))
-
-    #sets the global best position 
-    g_best = pos[global_best_pos_index]
-
-    #Step 2
-    #Iterating Until Stopping Criterion is met
-    Iter=0
-    particles=[pos]
-    while (Iter <= ns):
-        #step 2a
-        #Update Particle Velocity
-        v = update_velocity_testfunction(p_best,g_best,pos)
-        #Step 2b
-        #Update Particle Position
-        pos = update_position_testfunction(v,pos)
-        #step 2c
-        #Evaluate fitness
-        for i in range(n):
-            Par_Val.insert(i, Function(pos[i]))
-        
-        #Step 2d
-        #Updating the personal best
-        #if
-        p_best = update_personal_best_testfunction(p_best,Par_Val,pos)
-        #particles.append(p_best)
-        #Step 2e
-        #Updating the global best
-        #if
-        g_best = update_global_best_testfunction(g_best, Par_Val,pos)
-        g_best_value = Function(g_best)
-        print("The best position is: ", g_best," Value: ",g_best_value, " in iteration number ", Iter)
-        Iter = Iter+1
-            
-    return g_best, g_best_value, p_best
-
-n = 50; # number of particles
-ns = 15; #number of iterations
-c1 = 2; # cognitive coefficient
-c2 = 2; #social coefficient
-om = 0.9; # inertia weight
-k = 1; #velocity restricting constant
-t = 0.2; #animation speed/delay after each iteration
-
-#search range the Ackley function. to test the ackley function
-xmin = -10
-xmax = 10
-ymin = -10
-ymax = 10
-
- #maximum velocity
-vmx = k*(xmax-xmin)/2
-vmy = k*(ymax-ymin)/2
-
-#For our problem xmin/xmax and ymin/ymax should be gotten from the data however for the testing function it could be arbitrary (32)
-best_point, best_value,particles = PSO_testfunction(n,ns,c1,c2,om,k,t,xmin,xmax,ymin,ymax)
-print(best_point)
-
 def next_particle_set(particles):
     x= []
     y = []
@@ -188,66 +114,6 @@ y_vec = x_vec
 # Convert function to Meshgrid - for plotting purposes: 
 F = func_MG(x_vec,y_vec, Function)
 X, Y = np.meshgrid(x_vec,y_vec)
-
-best_point, best_value,particles = PSO_testfunction(n,5,c1,c2,om,k,t,xmin,xmax,ymin,ymax)
-#print(next_particle_set(particles))
-#print(particles[1])
-
-fig = plt.figure(figsize=(10, 10))
-axs = []
-
-for i in range(4):
-    axs.append(fig.add_subplot(3, 2, i + 1, projection='3d'))
-    axs[i].plot_surface(X, Y, F.transpose(), alpha=0.05, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    #axs[i].set_xlabel('x')
-    #axs[i].set_ylabel('y')
-    #axs[i].set_zlabel('f(x,y)')
-    axs[i].set_yticklabels([])
-    axs[i].set_xticklabels([])
-    axs[i].set_zticklabels([])
-    axs[i].set_xlim(-10, 10)
-    axs[i].set_ylim(-10, 10)
-    axs[i].set_zlim(-10, 10)
-    #axs[i].auto_scale_xyz([0, 500], [0, 500], [0, 0.15])
-
-fig.suptitle('PSO on ackley function', size=16, y=1.05)
-best_point, best_value,particles = PSO_testfunction(n,1,c1,c2,om,k,t,xmin,xmax,ymin,ymax)    
-#Plot initial position of particles
-axs[0].set_title('0 Iterations', pad=10)
-axs[0].scatter(*next_particle_set(particles), color='black')
-
-# #Go through the next 50 iterations
-# for i in range(5):
-#     next(PSO_testfunction(n,ns,c1,c2,om,k,t,xmin,xmax,ymin,ymax))
-best_point, best_value,particles = PSO_testfunction(n,5,c1,c2,om,k,t,xmin,xmax,ymin,ymax)
-# #Plot particle positions after 50 iterations
-axs[1].set_title('5 iterations', pad=10)
-axs[1].scatter(*next_particle_set(particles), color='black')
-
-#Go through the next 50 iterations
-# for i in range(5):
-#     next(PSO_testfunction(n,ns,c1,c2,om,k,t,xmin,xmax,ymin,ymax))
-best_point, best_value,particles = PSO_testfunction(n,10,c1,c2,om,k,t,xmin,xmax,ymin,ymax)
-#Plot particle positions after 50 iterations
-axs[2].set_title('10 iterations', pad=10)
-axs[2].scatter(*next_particle_set(particles), color='black')
-
-#Go through the next 50 iterations
-# for i in range(5):
-#     next(PSO_testfunction(n,ns,c1,c2,om,k,t,xmin,xmax,ymin,ymax))
-best_point, best_value,particles = PSO_testfunction(n,50,c1,c2,om,k,t,xmin,xmax,ymin,ymax)
-#Plot particle positions after 50 iterations
-axs[3].set_title('50 iterations', pad=10)
-axs[3].scatter(*next_particle_set(particles), color='black')
-
-plt.tight_layout()
-
-# --------------------- EX 2 starts here ---------------
-# We want the stuff below this basicly I think 
-
-
-#Load the data from the textfile assumed to be in the same folder as the notebook
-data = np.loadtxt("Experimental_Data_xy.txt", delimiter =',')
 
 #Define the function
 def f2(a, b, y, x): 
@@ -287,16 +153,6 @@ def calc_error(args):
     
     #Return the total error
     return e_2
-
-xmin = -3
-xmax = 3
-ymin = -6
-ymax = 6
-
- #maximum velocity
-vmx = k*(xmax-xmin)/2
-vmy = k*(ymax-ymin)/2
-
 
 def update_personal_best_testfunction(p_best,Par_Val,pos):
     for i in range(len(pos)):
@@ -393,9 +249,6 @@ ax2.set_ylabel('y')
 ax2.set_zlabel('f(x,y)')
 ax2.set_title('Function', pad=10)
 
-from scipy.interpolate import interp1d
-from scipy.optimize import minimize
-from numpy.linalg import norm 
 x=[1,2]
 Resedual = minimize(calc_error, x, method='nelder-mead',options={'xatol': 1e-8, 'disp': True})
 print(Resedual.x)
@@ -421,6 +274,8 @@ ax2.set_xlabel('x')
 ax2.set_ylabel('y')
 ax2.set_zlabel('f(x,y)')
 ax2.set_title('Function', pad=10)
+
+plt.show()
 
 
 
