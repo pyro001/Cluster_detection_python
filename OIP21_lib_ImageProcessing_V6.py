@@ -162,9 +162,9 @@ def countRods(i):
                 try:
                     # check if the to line segments intersect (in try because /0)
                     t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / (
-                                (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
+                            (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
                     u = ((x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2)) / (
-                                (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
+                            (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
                     # check difference in angles taking care of 0-360
                     a = theta - i[1]
                     a = ((a + np.pi / 2) % (np.pi * 1)) - np.pi / 2
@@ -304,23 +304,48 @@ def openCv_HoughCircles(img, tolerance, minRadius, maxRadius):
     return circles
 
 
-def locwatershed(img_org, thresh2,modifier=1):
-    kernel = np.ones((3, 3), np.uint8)
-    thresh2 = cv2.erode(thresh2, kernel, iterations=1)
-    minareacircles = []
-    avgr=[]
-    # print(img.shape)
+def find_particle(img, x,y,r, percentage=0.1): #set to 10% by default
+    # This failed horribly
+    img_temp = img[int(y - r):int(y + r), int(x - r):int(x + r)]
+    whitePixles = cv2.countNonZero(img_temp)
+    if whitePixles >= (
+            r * r * 4) * percentage:  # Calculate the area of a circle and then multiplies it by the % and then checks if it is bigger then the white in the area
+        return True  # if the smallest white is bigger then area*% append it
+    else:
+        print("thing ignored, size ", whitePixles)
+        return False
+
+
+def locwatershed(img_org, thresh2, modifier=1.9):
+    zoom = False
+    redux = False
     img = img_org.copy()
-    # print()
     l, b = np.shape(thresh2)
-    if l < 40 and b < 40:
+    if l < 50 and b < 50:
+        zoom = True
         # print("zoom activated", l,b)
         img = cv2.resize(img, (0, 0), fx=2, fy=2)
+        thresh2 = cv2.resize(thresh2, (0, 0), fx=4, fy=4)
+    kernel = np.array(Mex5, np.uint8)  # np.ones((3, 3), np.uint8)
+    temp = min_filter(thresh2, 3)
+    # thresh2= auto_thresh(thresh2)
+    temp = cv2.dilate(cv2.erode(temp, kernel, iterations=1), kernel, iterations=1)
+
+    if cv2.countNonZero(temp) > 0.4 * cv2.countNonZero(thresh2) and not zoom:
+        thresh2 = temp
+        redux=True
+        print(cv2.countNonZero(temp), 0.6 * cv2.countNonZero(thresh2))
+    else:
+        kernel =  np.ones((3, 3), np.uint8)
+        thresh2=cv2.erode(thresh2, kernel, iterations=1)
+    minareacircles = []
+    avgr = []
+
     D = ndimage.distance_transform_edt(thresh2)
     localMax = peak_local_max(D, indices=False, min_distance=5,
                               labels=thresh2)
     # perform a connected component analysis on the local peaks,
-    # using 8-connectivity, then appy the Watershed algorithm
+    # using 8-connectivity, then apply the Watershed algorithm
     markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
     labels = watershed(-D, markers, mask=thresh2)
 
@@ -341,12 +366,13 @@ def locwatershed(img_org, thresh2,modifier=1):
         c = max(cnts, key=cv2.contourArea)
         # draw a circle enclosing the object
         ((x, y), r) = cv2.minEnclosingCircle(c)
-        minareacircles.append([x, y, r])
-        avgr.append(r)
+        if(find_particle(thresh2,x,y,r,0.3)):
+            minareacircles.append([x, y, r])
+            avgr.append(r)
     try:
-        print(avgr)
+        # print(avgr)
         # print(np.mean(avgr)-2*np.std(avgr), "\n\n\n")
-        Removed = [i for i in minareacircles if i[2] < np.mean(avgr)-modifier*np.std(avgr)]
+        # Removed = [i for i in minareacircles if i[2] < np.mean(avgr)-modifier*np.std(avgr)]
         # print("::: REmoved DAta:::", len(Removed))
         minareacircles = [i for i in minareacircles if i[2] >= np.mean(avgr)-modifier*np.std(avgr)]
 
@@ -354,12 +380,15 @@ def locwatershed(img_org, thresh2,modifier=1):
             x, y, z = l
             cv2.circle(img, (int(x), int(y)), int(r), (0, 255, 0), 1)
     except Exception as E:
-        print("Error: " ,E ,len(np.unique(labels)))
+        print("Error: ", E, len(np.unique(labels)))
     # cv2.putText(image, "#{}".format(label), (int(x) - 10, int(y)),
     # cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
     # show the output image
     # print("Comaprison::",len(minareacircles),len(np.unique(labels))-1)
-    return thresh2,img, len((minareacircles))
+    if redux:
+        print(minareacircles,cv2.countNonZero(temp) ,cv2.countNonZero(thresh2))
+    return thresh2, img, len((minareacircles))
+
 
 # -------------------------------------------------------------
 
@@ -1647,6 +1676,3 @@ def plot_image_sequence(sequence, title='Intensity Image', cmap='gray', vmax=255
         ax.set_title('threshold level: %3i' % (i))
         plt.pause(0.01)
     return fig, ax
-
-
-
