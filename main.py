@@ -19,8 +19,8 @@ def power_law(x, a, b):
 
 
 if __name__ == '__main__':
-    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
-
+    # img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
+    img_array= ['./pictures/big_circles_orginal.tif']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -29,6 +29,7 @@ if __name__ == '__main__':
     totalTime = 0
     shortestTime = 900000000
     longestTime = 0
+    circleClusters = 0
 
     shortestPicture = 'asd'
     longestPicture = 'asd'
@@ -70,7 +71,7 @@ if __name__ == '__main__':
 
             img_edge, img_thresh = pre_conditioning(i)
 
-            watershed_img, c = locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresh)
+            img_thresh2,watershed_img, c = locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresh)
             watershed_clusters.append(c)
             m,n= np.shape(img_thresh)
             try:
@@ -83,7 +84,16 @@ if __name__ == '__main__':
                 for i in circles[0, :]:
                     numberOfCircles = numberOfCircles + 1
 
-
+            plt.subplot(2*size, size, count)
+            plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
+            plt.xticks([])
+            plt.yticks([])
+            count += 1
+            plt.subplot(2 * size,  size, count)
+            plt.imshow(img_thresh2, 'gray', vmin=0, vmax=255)
+            plt.xticks([])
+            plt.yticks([])
+            count += 1
             #-------------------------------------
             # N, M = img_edge.shape
             # if numberOfCircles < 3: 
@@ -150,12 +160,16 @@ if __name__ == '__main__':
         # Just gathering some data and stuff, not sure how much is relavant or wanted
         x = watershed_clusters
         y=ForegBackg ##normalize the data?
-        n, bins, patches = plt.hist(x, facecolor='blue', alpha=0.5)
+        ##the output looks wierd just take a look
+        plt.show()
+        n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
+        print("n", n,"bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
         # num_bins = int(np.ceil(max(y) / 20))
         n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
+        print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
@@ -219,8 +233,9 @@ if __name__ == '__main__':
     print(circleClusters)
     print("Number of Circles in picture : ")
     print(totalNumberOfCircles)
-    print("Average number of circles in clusters : ")              
-    print(totalNumberOfCircles / circleClusters)
+    print("Average number of circles in clusters : ")    
+    if circleClusters != 0:          
+        print(totalNumberOfCircles / circleClusters)
     
     print("\n\nPicture with most ammout of lines")
     print(linePicture)
