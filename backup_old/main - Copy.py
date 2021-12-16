@@ -12,8 +12,8 @@ import time
 
 
 if __name__ == '__main__':
-    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', 'big_triangles_orginal.png']
-    #img_array= ['./pictures/big_circles_orginal.tif']
+    # img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
+    img_array= ['./pictures/big_circles_orginal.tif']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                     # lineClusters = numberOfClusters
                     # # Try to detect lines in the image
                     #
-                    lines, numberOfLines = countRods(i)
+                    # lines, numberOfLines = countRods(i)
                     # count_b += 1
                     # print(count_b)
                     #
