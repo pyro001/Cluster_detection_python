@@ -305,14 +305,14 @@ def openCv_HoughCircles(img, tolerance, minRadius, maxRadius):
 
 
 def find_particle(img, x,y,r, percentage=0.1): #set to 10% by default
-    # This failed horribly
+    np.ceil(r)
     img_temp = img[int(y - r):int(y + r), int(x - r):int(x + r)]
     whitePixles = cv2.countNonZero(img_temp)
     if whitePixles >= (
             r * r * 4) * percentage:  # Calculate the area of a circle and then multiplies it by the % and then checks if it is bigger then the white in the area
         return True  # if the smallest white is bigger then area*% append it
     else:
-        print("thing ignored, size ", whitePixles)
+        # print("thing ignored, size ", whitePixles)
         return False
 
 
@@ -324,7 +324,7 @@ def locwatershed(img_org, thresh2, modifier=1.9):
     if l < 50 and b < 50:
         zoom = True
         # print("zoom activated", l,b)
-        img = cv2.resize(img, (0, 0), fx=2, fy=2)
+        img = cv2.resize(img, (0, 0), fx=1.2, fy=1.2)
         thresh2 = cv2.resize(thresh2, (0, 0), fx=4, fy=4)
     kernel = np.array(Mex5, np.uint8)  # np.ones((3, 3), np.uint8)
     temp = min_filter(thresh2, 3)
