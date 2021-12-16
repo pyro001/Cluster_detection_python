@@ -4,15 +4,32 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import cv2
  
-def f(x,y):
+def f(pos):
+    '''The Ackley Function (2D-implementation)
+    
+    The 2D input vector needs to be of the form: 
+    np.array([[-2., 2., 2.],[2., 3., -2.]])
+    '''
+    x = pos[0]
+    y = pos[1]
+    a = 20
+    b = 0.2
+    c = 2 * np.pi
+    sum_sq_term = -a * np.exp(-b * np.sqrt(x*x + y*y) / 2)
+    cos_term = -np.exp((np.cos(c*x) + np.cos(c*y)) / 2)
+    Z = -(a + np.exp(1) + sum_sq_term + cos_term) 
+    return Z
+
+
+#def f(x,y):
     "Objective function"
     #return (x-3.14)**2 + (y-2.72)**2 + np.sin(3*x+1.41) + np.sin(4*y-1.73)
-    return np.random.rand(2, 2)
+ #   return np.random.rand(2, 2)
     
-drasl = [[45.625, 24.5, 12.802077293395996], [30.0, 34.5, 12.619529724121094], [16.68181800842285, 36.681819915771484, 4.0478515625], [52.5, 49.5, 3.5356338024139404], [23.0, 51.0, 5.099119663238525], [38.0, 57.0, 4.123205661773682]]
+drasl = np.ndarray([[45.625, 24.5, 12.802077293395996], [30.0, 34.5, 12.619529724121094], [16.68181800842285, 36.681819915771484, 4.0478515625], [52.5, 49.5, 3.5356338024139404], [23.0, 51.0, 5.099119663238525], [38.0, 57.0, 4.123205661773682]])
 
-x, y = np.array(np.meshgrid(np.linspace(0,20,100), np.linspace(0,20,100)))
-z = f(x, y)
+#x, y = np.array(np.meshgrid(np.linspace(0,20,100), np.linspace(0,20,100)))
+z = f(drasl)
  
 # Find the global minimum
 x_min = x.ravel()[z.argmin()]
