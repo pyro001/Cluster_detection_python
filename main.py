@@ -44,6 +44,7 @@ if __name__ == '__main__':
         circleArray = []  # This should also maybe be global?
         watershed_clusters=[]
         ForegBackg=[]
+        ForegBackgRod=[]
         rodArrayCount = [] 
         numberOfClusters = 0
         numberOfCircles = 0
@@ -144,7 +145,14 @@ if __name__ == '__main__':
                     # # Try to detect lines in the image
                     img_lines, numberOfLines = countRods(i)
                     rodArrayCount.append(numberOfLines)
+<<<<<<< HEAD
                     count_rods.append(numberOfLines)
+=======
+                    try:
+                        ForegBackgRod.append(cv2.countNonZero(img_thresh)/(numberOfLines) )
+                    except ZeroDivisionError:
+                        pass
+>>>>>>> 261a82e7bec5c97e9d6c77825f0d68829e35958d
 
 
 
@@ -168,7 +176,14 @@ if __name__ == '__main__':
         print("n", n,"bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
-        plt.title('Rods')
+        plt.title('Rods Nr particles')
+        plt.show()
+        #plot area per rod using lines
+        n, bins, patches = plt.hist(ForegBackgRod,bins=40,  facecolor='red', alpha=0.5)
+        print("n", n, "bins", bins, "patches", patches)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.title('Area per perticle lines')
         plt.show()
         ##the output looks wierd just take a look
         plt.show()
@@ -176,12 +191,14 @@ if __name__ == '__main__':
         print("n", n,"bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
+        plt.title('Nr particles watershed')
         plt.show()
         # num_bins = int(np.ceil(max(y) / 20))
         n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
         print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
+        plt.title('Area per perticle watershed')
         plt.show()
         x = np.linspace(0,450, len(n))
         xdata = np.linspace(0, 450, 40)
