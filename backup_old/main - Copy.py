@@ -13,7 +13,7 @@ import time
 
 if __name__ == '__main__':
     # img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
-    img_array= ['./pictures/big_lines_orginal.tif']
+    img_array= ['./pictures/big_circles_orginal.tif']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -37,7 +37,6 @@ if __name__ == '__main__':
         circleArray = []  # This should also maybe be global?
         watershed_clusters=[]
         ForegBackg=[]
-        rodArrayCount = [] 
         numberOfClusters = 0
         numberOfCircles = 0
         numberOfLine = 0
@@ -64,6 +63,7 @@ if __name__ == '__main__':
             totalNumberOfClusters = totalNumberOfClusters + 1
 
             img_edge, img_thresh = pre_conditioning(i)
+
             img_thresh2,watershed_img, c = locwatershed(cv2.cvtColor(i, cv2.COLOR_GRAY2BGR),img_thresh)
             watershed_clusters.append(c)
             m,n= np.shape(img_thresh)
@@ -74,7 +74,7 @@ if __name__ == '__main__':
             circles = openCv_HoughCircles(img_edge, 12, 6, 12)
 
             if circles is not None:
-                for j in circles[0, :]:
+                for i in circles[0, :]:
                     numberOfCircles = numberOfCircles + 1
 
             plt.subplot(2*size, size, count)
@@ -87,7 +87,6 @@ if __name__ == '__main__':
             plt.xticks([])
             plt.yticks([])
             count += 1
-
             #-------------------------------------
             # N, M = img_edge.shape
             # if numberOfCircles < 3: 
@@ -133,10 +132,16 @@ if __name__ == '__main__':
                 else : 
                     linePicture = x
                     ##momentarily commented // this is annoyingly slow
+                    # lineClusters = numberOfClusters
                     # # Try to detect lines in the image
-                    img_lines, numberOfLines = countRods(i)
-                    rodArrayCount.append(numberOfLines)
-
+                    #
+                    # lines, numberOfLines = countRods(i)
+                    # count_b += 1
+                    # print(count_b)
+                    #
+                    # if lines is not None:
+                    #     for i in range(0, len(lines)):
+                    #         numberOfLine = numberOfLine + 1
 
 
             # plt.subplot(size, size, count)
@@ -148,23 +153,15 @@ if __name__ == '__main__':
         # Just gathering some data and stuff, not sure how much is relavant or wanted
         x = watershed_clusters
         y=ForegBackg ##normalize the data?
-        plt.show()
-        #plot rods count histogram
-        n, bins, patches = plt.hist(rodArrayCount,20, facecolor='blue', alpha=0.5)
-        print("n", n,"bins", bins, "patches", patches)
-        plt.xlabel('Bins')
-        plt.ylabel('Frequency')
-        plt.title('Rods')
-        plt.show()
         ##the output looks wierd just take a look
         plt.show()
-        n, bins, patches = plt.hist(x,2*max(x), facecolor='blue', alpha=0.5)
+        n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
         print("n", n,"bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
         # num_bins = int(np.ceil(max(y) / 20))
-        n, bins, patches = plt.hist(y,100,  facecolor='red', alpha=0.5)
+        n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
         print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
