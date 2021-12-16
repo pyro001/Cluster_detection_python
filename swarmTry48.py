@@ -63,7 +63,6 @@ def Function(pos):
     return Z
 
 def update_velocity_testfunction(p_best,g_best,pos):
-    #v = list(np.zeros((50,2)))
     v = ([np.array([0, 0]) for _ in range(n)])
     nv = []
     for i in range(n):
@@ -225,7 +224,7 @@ def PSO_testfunction(n,ns,c1,c2,om,k,t,xmin,xmax,ymin,ymax):
             
     return g_best, g_best_value, p_best
 
-best_point, best_value,particles = PSO_testfunction(n,50,c1,c2,om,k,t,xmin,xmax,ymin,ymax)
+best_point, best_value,particles = PSO_testfunction(n,ns,c1,c2,om,k,t,xmin,xmax,ymin,ymax)
 
 fig = plt.figure(figsize=(12, 6))
 fig.suptitle('Supplied Experimental Data & Function', size=16, y=0.95)
@@ -276,6 +275,6 @@ ax2.set_zlabel('f(x,y)')
 ax2.set_title('Function', pad=10)
 
 plt.show()
-
+   
 
 
