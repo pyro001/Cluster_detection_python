@@ -17,8 +17,8 @@ from numpy.linalg import norm
 
 data = np.loadtxt("Experimental_Data_xy.txt", delimiter =',')
 
-n = 2; # number of particles
-ns = 2; #number of iterations
+n = 15; # number of particles
+ns = 20; #number of iterations
 c1 = 2; # cognitive coefficient
 c2 = 2; #social coefficient
 om = 0.9; # inertia weight
@@ -34,17 +34,6 @@ ymax = 10
 #maximum velocity
 vmx = k*(xmax-xmin)/2
 vmy = k*(ymax-ymin)/2
-
-
-# xmin = -3
-# xmax = 3
-# ymin = -6
-# ymax = 6
-
-#  #maximum velocity
-# vmx = k*(xmax-xmin)/2
-# vmy = k*(ymax-ymin)/2
-
 
 def Function(pos):
     '''The Ackley Function (2D-implementation)
@@ -62,6 +51,8 @@ def Function(pos):
     Z = -(a + np.exp(1) + sum_sq_term + cos_term) 
     return Z
 
+
+# Need 
 def update_velocity_testfunction(p_best,g_best,pos):
     v = ([np.array([0, 0]) for _ in range(n)])
     nv = []
@@ -81,13 +72,14 @@ def update_velocity_testfunction(p_best,g_best,pos):
             nv[i][1] = -vmy
     return nv
 
-
+# need 
 def update_position_testfunction(v,pos):
     new_pos=[]
     for i in range(n):
         new_pos.append(pos[i]+v[i])
     return new_pos
 
+# Dont need 
 def next_particle_set(particles):
     x= []
     y = []
@@ -97,6 +89,8 @@ def next_particle_set(particles):
         y.append(particles[p][1].tolist())
         z.append(Function(particles[p]))
     return [x, y, z]
+
+# dont need 
 def func_MG(x_vec, y_vec, Function):
     '''Convert the 2D-FUNCTION TO THE MESHGRID 
     (might be possible in an easier way)'''
@@ -116,7 +110,9 @@ X, Y = np.meshgrid(x_vec,y_vec)
 
 #Define the function
 def f2(a, b, y, x): 
-        return (a- x)**2 + b*(y - x**2)**2
+    c = 5
+        #return (a- x)**2 + b*(y - x**2)**2
+    return a*np.exp(-np.power(x - b, 2)/(2*np.power(c, 2))) - y
 print(data[0])
 
 fig = plt.figure(figsize=(12, 6))
@@ -141,6 +137,7 @@ ax2.set_ylabel('y')
 ax2.set_zlabel('f(x,y)')
 ax2.set_title('Function', pad=10)
 
+# Dont need? 
 def calc_error(args):
     '''args is the parameter space arguments as a list. In this case a and b.'''
     #Initially there is no error
@@ -153,18 +150,21 @@ def calc_error(args):
     #Return the total error
     return e_2
 
+# Need 
 def update_personal_best_testfunction(p_best,Par_Val,pos):
     for i in range(len(pos)):
         if ( Par_Val[i] <=Function(p_best[i]) ):
             p_best[i] = pos[i]
     return p_best
 
+# need 
 def update_global_best_testfunction(g_best,Par_Val,pos):
     for i in range(n):
         if ( Par_Val[i]<= Function(g_best) ):
             g_best = pos[i]
     return g_best
 
+# Need 
 def PSO_testfunction(n,ns,c1,c2,om,k,t,xmin,xmax,ymin,ymax):
     
 
