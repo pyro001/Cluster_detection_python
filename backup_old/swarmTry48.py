@@ -35,6 +35,23 @@ ymax = 10
 vmx = k*(xmax-xmin)/2
 vmy = k*(ymax-ymin)/2
 
+def Function(pos):
+    '''The Ackley Function (2D-implementation)
+    
+    The 2D input vector needs to be of the form: 
+    np.array([[-2., 2., 2.],[2., 3., -2.]])
+    '''
+    x = pos[0]
+    y = pos[1]
+    a = 20
+    b = 0.2
+    c = 2 * np.pi
+    sum_sq_term = -a * np.exp(-b * np.sqrt(x*x + y*y) / 2)
+    cos_term = -np.exp((np.cos(c*x) + np.cos(c*y)) / 2)
+    Z = -(a + np.exp(1) + sum_sq_term + cos_term) 
+    return Z
+
+
 # Need 
 def update_velocity_testfunction(p_best,g_best,pos):
     v = ([np.array([0, 0]) for _ in range(n)])
@@ -62,8 +79,37 @@ def update_position_testfunction(v,pos):
         new_pos.append(pos[i]+v[i])
     return new_pos
 
+# Dont need 
+def next_particle_set(particles):
+    x= []
+    y = []
+    z = []
+    for p in range(len(particles)):
+        x.append(particles[p][0].tolist())
+        y.append(particles[p][1].tolist())
+        z.append(Function(particles[p]))
+    return [x, y, z]
+
+# dont need 
+def func_MG(x_vec, y_vec, Function):
+    '''Convert the 2D-FUNCTION TO THE MESHGRID 
+    (might be possible in an easier way)'''
+    F = np.zeros((x_vec.shape[0],y_vec.shape[0]))
+    for cntx in range(x_vec.shape[0]):
+        for cnty in range(y_vec.shape[0]):
+            F[cntx,cnty] = Function([x_vec[cntx], y_vec[cnty]])        
+    return(F)  
+
+# Setup work
+x_vec = np.arange(-10.,10.,0.1)
+y_vec = x_vec
+
+# Convert function to Meshgrid - for plotting purposes: 
+F = func_MG(x_vec,y_vec, Function)
+X, Y = np.meshgrid(x_vec,y_vec)
+
 #Define the function
-def functionGauss(a, b, y, x): 
+def f2(a, b, y, x): 
     c = 5
         #return (a- x)**2 + b*(y - x**2)**2
     return a*np.exp(-np.power(x - b, 2)/(2*np.power(c, 2))) - y
@@ -82,7 +128,7 @@ ax1.set_title('Data', pad=10)
 x = np.linspace(-0.20, 0.20, 30)
 y = np.linspace(-0.020, 0.020, 30)
 X, Y = np.meshgrid(x, y)
-Z = functionGauss(1, 2, X, Y)
+Z = f2(1, 2, X, Y)
 
 ax2 = fig.add_subplot(122,projection = '3d')
 ax2.plot_surface(X, Y, Z, alpha=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
@@ -91,7 +137,7 @@ ax2.set_ylabel('y')
 ax2.set_zlabel('f(x,y)')
 ax2.set_title('Function', pad=10)
 
-# Error function  
+# Dont need? 
 def calc_error(args):
     '''args is the parameter space arguments as a list. In this case a and b.'''
     #Initially there is no error
@@ -99,7 +145,7 @@ def calc_error(args):
     
     for p in data:
         #Calculate the function value for the (x,y) of the point and subtract the z value from this and then square this and add to the total error.
-        e_2 += (functionGauss(args[0], args[1], p[0], p[1]) - p[2])**2
+        e_2 += (f2(args[0], args[1], p[0], p[1]) - p[2])**2
     
     #Return the total error
     return e_2
@@ -107,14 +153,14 @@ def calc_error(args):
 # Need 
 def update_personal_best_testfunction(p_best,Par_Val,pos):
     for i in range(len(pos)):
-        if ( Par_Val[i] <= calc_error(p_best[i]) ):
+        if ( Par_Val[i] <=Function(p_best[i]) ):
             p_best[i] = pos[i]
     return p_best
 
 # need 
 def update_global_best_testfunction(g_best,Par_Val,pos):
     for i in range(n):
-        if ( Par_Val[i]<= calc_error(g_best) ):
+        if ( Par_Val[i]<= Function(g_best) ):
             g_best = pos[i]
     return g_best
 
@@ -193,7 +239,7 @@ ax1.set_title('Data', pad=10)
 x = np.linspace(-3, 6, 30)
 y = np.linspace(-6, 6, 30)
 X, Y = np.meshgrid(x, y)
-Z = functionGauss(best_point[0],best_point[1], X, Y)
+Z = f2(best_point[0],best_point[1], X, Y)
 
 ax2 = fig.add_subplot(122,projection = '3d')
 ax2.plot_surface(X, Y, Z, alpha=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
@@ -219,7 +265,7 @@ ax1.set_title('Data', pad=10)
 x = np.linspace(-3, 6, 30)
 y = np.linspace(-6, 6, 30)
 X, Y = np.meshgrid(x, y)
-Z = functionGauss(Resedual.x[0],Resedual.x[1], X, Y)
+Z = f2(Resedual.x[0],Resedual.x[1], X, Y)
 
 ax2 = fig.add_subplot(122,projection = '3d')
 ax2.plot_surface(X, Y, Z, alpha=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
