@@ -68,6 +68,12 @@ from skimage.segmentation import watershed
 # ----------------------------------------------------------
 # Modified stuff 
 
+def power_law(x, a, b):
+    return a * np.power(x, b)
+
+def gaussian(x, a, b, c):
+    return a*np.exp(-np.power(x - b, 2)/(2*np.power(c, 2)))
+
 def skeletonize(img):
     """ OpenCV function to return a skeletonized version of img, a Mat object"""
 
@@ -272,8 +278,7 @@ def find_particle(img, x,y,r, percentage=0.1): #set to 10% by default
     # This failed horribly
     img_temp = img[int(y - r):int(y + r), int(x - r):int(x + r)]
     whitePixles = cv2.countNonZero(img_temp)
-    if whitePixles >= (
-            r * r * 4) * percentage:  # Calculate the area of a circle and then multiplies it by the % and then checks if it is bigger then the white in the area
+    if whitePixles >= (r * r * 4) * percentage:  # Calculate the area of a circle and then multiplies it by the % and then checks if it is bigger then the white in the area
         return True  # if the smallest white is bigger then area*% append it
     else:
         print("thing ignored, size ", whitePixles)
