@@ -55,13 +55,23 @@ if __name__ == '__main__':
 
         t = time.time()
         rodsCount = 0
+        x = []
         for i in clusterArray:
             count += 1
-            lines, numberOfLines = countRods(i)
-            print(numberOfLines)
+            img_lines, numberOfLines = countRods(i)
+            x.append(numberOfLines)
             rodsCount += numberOfLines
-            plt.imshow(lines,'gray',vmin=0,vmax=255)
-            plt.show()
+
+            #plt.imshow(lines,'gray',vmin=0,vmax=255)
+            #plt.show()
+        print(x)
+        plt.show()
+        n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
+        print("n", n,"bins", bins, "patches", patches)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.show()
+
         elapse = time.time() - t
         print(rodsCount/len(clusterArray))
         print(elapse)
