@@ -12,9 +12,9 @@ import time
 
 
 if __name__ == '__main__':
-    # img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
+    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
     #img_array= ['./pictures/big_lines_orginal.tif']
-    img_array = 'big_triangles_orginal.png'
+    #img_array = ['./pictures/big_triangles_orginal.png']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -30,6 +30,12 @@ if __name__ == '__main__':
     circlePicture = 'asd'
     linePicture = 'asd'
     trianglePicture = 'asd'
+
+    count_clusters = 0
+    count_foreground_pixels = [[], [], []]
+    count_circles = []
+    count_rods = []
+    count_triangles = []
 
     for x in img_array:  ## loop through all the images images stored in a vector
         # Local variables
@@ -124,18 +130,21 @@ if __name__ == '__main__':
                 totalNumberOfCircles = numberOfCircles
                 circlePicture = x
                 circleClusters = numberOfClusters
+                count_circles.append(numberOfCircles)
             else :
                 if (numberOfCircles/np.sum(watershed_clusters)) >= 0.40: 
                     #print("This is probably a Triangle!")
                     numberOfTriangles = numberOfTriangles + c
                     trianglePicture = x
                     trianglesClusters = numberOfClusters
+                    count_triangles.append(numberOfTriangles)
                 else : 
                     linePicture = x
                     ##momentarily commented // this is annoyingly slow
                     # # Try to detect lines in the image
                     img_lines, numberOfLines = countRods(i)
                     rodArrayCount.append(numberOfLines)
+                    count_rods.append(numberOfLines)
 
 
 
@@ -144,6 +153,11 @@ if __name__ == '__main__':
             # plt.xticks([])
             # plt.yticks([])
             # count += 1
+
+            count_foreground_pixels[img_array.index(x)].append((np.count_nonzero(img_thresh)/img_thresh.size)*100)
+            
+            
+            
 
         # Just gathering some data and stuff, not sure how much is relavant or wanted
         x = watershed_clusters
@@ -271,3 +285,71 @@ if __name__ == '__main__':
     print(longestPicture)
 
     print("\n\n-----------------------------------------------------")
+
+
+    fig, axs1 = plt.subplots(4, 1)
+    fig, axs2 = plt.subplots(1, 2)
+    fig, axs3 = plt.subplots(1, 2)
+    fig, axs4 = plt.subplots(1, 2)
+
+    axs1[0].set_xlabel('Bins')
+    axs1[0].set_ylabel('Frequency')
+    axs1[0].set_title('Foreground pixels as percentage of all pixels')
+    axs1[1].set_xlabel('Bins')
+    axs1[1].set_ylabel('Frequency')
+    axs1[1].set_title('Foreground pixels as percentage of all pixels')
+    axs1[2].set_xlabel('Bins')
+    axs1[2].set_ylabel('Frequency')
+    axs1[2].set_title('Foreground pixels as percentage of all pixels')
+    axs1[3].set_xlabel('Bins')
+    axs1[3].set_ylabel('Frequency')
+    axs1[3].set_title('Foreground pixels as percentage of all pixels')
+
+    axs2[0].set_title('Number of particles per circle cluster')
+    axs3[0].set_title('Number of particles per rod cluster')
+    axs4[0].set_title('Number of particles per triangle cluster')
+
+    count_circles = np.array(count_circles)
+    count_rods = np.array(count_rods)
+    count_triangles = np.array(count_triangles)
+
+    print(count_triangles)
+    print(count_rods)
+
+    print("FOREGROUND PIXELS")
+    axs1[0].hist(count_foreground_pixels, numberOfClusters, color=["red", "green", "blue"])
+    axs1[1].hist(count_foreground_pixels[0], len(count_foreground_pixels[0]), color="red")
+    axs1[2].hist(count_foreground_pixels[1], len(count_foreground_pixels[1]), color="green")
+    axs1[3].hist(count_foreground_pixels[2], len(count_foreground_pixels[2]), color="blue")
+    
+    axs2[0].boxplot(count_circles)
+    axs2[1].violinplot(count_circles)
+
+    axs3[0].boxplot(count_rods)
+    axs3[1].violinplot(count_rods)
+
+    axs4[0].boxplot(count_triangles)
+    axs4[1].violinplot(count_triangles)
+
+
+
+    # print("CIRCLES")
+    # axs2[0].hist(count_circles, count_circles.size, color=["red", "green", "blue"])
+    # axs2[1].hist(count_circles[0], len(count_circles[0]), color="red")
+    # axs2[2].hist(count_circles[1], len(count_circles[1]), color="green")
+    # axs2[3].hist(count_circles[2], len(count_circles[2]), color="blue")
+    
+
+    # print("RODS")
+    # axs3[0].hist(count_rods, count_rods.size, color=["red", "green", "blue"])
+    # axs3[1].hist(count_rods[0], len(count_rods[0]), color="red")
+    # axs3[2].hist(count_rods[1], len(count_rods[1]), color="green")
+    # axs3[3].hist(count_rods[2], len(count_rods[2]), color="blue")
+    
+
+    # print("TRIANGLES")
+    # axs4[0].hist(count_triangles, count_triangles.size, color=["red", "green", "blue"])
+    # axs4[1].hist(count_triangles[0], len(count_triangles[0]), color="red")
+    # axs4[2].hist(count_triangles[1], len(count_triangles[1]), color="green")
+    # axs4[3].hist(count_triangles[2], len(count_triangles[2]), color="blue")
+    plt.show()
