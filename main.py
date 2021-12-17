@@ -10,13 +10,13 @@ from OIP21_lib_ImageProcessing_V6 import *
 import cv2  # Some of the things in other library took to long
 import math
 import time
-
+Write_to_file=True
 
 if __name__ == '__main__':
     # img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
-    #img_array= ['./pictures/big_lines_orginal.tif']
+    img_array= ['./pictures/big_circles_orginal.tif']
     #img_array = './pictures/big_triangles_orginal.png'
-    img_array = ['./pictures/big_triangles_orginal.png']
+    # img_array = ['./pictures/big_triangles_orginal.png']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -172,11 +172,20 @@ if __name__ == '__main__':
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
+        if(Write_to_file):
+            name = x.replace(".", "")
+            f = open("."+name+"txt", "a")
+            for i in range(len(n)):
+                if (n[i] > 0):
 
+                    f.write((n[i]+","+ bins[i]+"/n"))
+            f.write("Now the file has more content!")
+            f.close()
         xdata = np.linspace(0, 450, 40)
         fittingFunction, cov = scipy.stats.distributions.norm.fit(ForegBackg)
         fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
         plt.plot(xdata, fitted_data, 'r-')
+
         #curve_fit(f=gaussian, xdata=x, ydata=n)
         # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
         plt.show()
@@ -263,14 +272,9 @@ if __name__ == '__main__':
     print(totalTime / len(img_array))
     print("\nShortest run time : ")
     print(shortestTime)
-    plt.title("Shortest run time picture : ")
-    plt.imshow(crop_levels(int(shortestPicture)),cmap="Greys")
-    plt.show()
     print("\nLongest run time : ")
     print(longestTime)
     # print("Longest run time picture : ")
     # print(longestPicture)
-    plt.title("\nLongest run time : ")
-    plt.imshow(crop_levels(int(longestPicture)),cmap="Greys")
-    plt.show()
+
     print("\n\n-----------------------------------------------------")
