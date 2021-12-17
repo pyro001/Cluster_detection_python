@@ -149,10 +149,7 @@ if __name__ == '__main__':
             f = open("."+name+".txt", "a")
             for i in range(len(n)):
                 if (n[i] > 0):
-                    f.write(str(n[i] + bins[i]))
-                    print("\n")
-                    #f.write((n[i]+","+ bins[i]+"/n"))
-            f.write("Now the file has more content!")
+                    f.write(str(n[i]) +","+str( bins[i])+"\n")
             f.close()
 
         
