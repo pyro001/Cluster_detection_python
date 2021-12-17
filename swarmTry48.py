@@ -7,9 +7,9 @@ import numpy as np
 
 # Need
 def update_velocity_testfunction(p_best, g_best, pos):
-    v = ([np.array([0,0, 0]) for _ in range(particle_number)])
+    v = ([np.array([0, 0, 0]) for _ in range(particle_number)])
     nv = []
-    print(p_best.shape,g_best.shape)
+    print(p_best.shape, g_best.shape)
     for i in range(particle_number):
         nv.append((om * v[i]) + (c1 * ran.random()) * (p_best[i] - pos[i]) + (c2 * ran.random()) * (g_best - pos[i]))
         # Thresholding the Velocity
@@ -36,7 +36,7 @@ def functionGauss(peak, stddev, center, actual_x):
 
 
 def modelFunction(peak, stddev, center, x):
-    return (peak * np.power(stddev, 2) / ((np.power(x - center, 2) + np.power(stddev, 2))))
+    return (peak) * np.power(stddev, 2) / (np.power(x - (center), 2) + np.power(stddev, 2))
 
 
 # Error function
@@ -47,7 +47,7 @@ def calc_error(args):
 
     for p in data:
         # Calculate the function value for the (x,y) of the point and subtract the z value from this and then square this and add to the total error.
-        e_2 += (modelFunction(args[0], args[1],args[2], p[1]) - p[0]) ** 2
+        e_2 += (modelFunction(args[0], args[1], args[2], p[1]) - p[0]) ** 2
 
     # Return the total error
     return e_2
@@ -73,8 +73,9 @@ def update_global_best_testfunction(g_best, Par_Val, pos):
 def PSO_testfunction(n, ns, c1, c2, om, k, t, xmin, xmax):
     # Step 1a,
     # Initializing the Position
-    xmax=int(xmax)
-    pos = np.array([np.array([ran.randrange(xmin, xmax), ran.randrange(xmin, xmax),ran.randrange(xmin, xmax)]) for _ in range(n)])
+    xmax = int(xmax)
+    pos = np.array(
+        [np.array([ran.randrange(xmin, xmax), ran.randrange(xmin, xmax), ran.randrange(xmin, xmax)]) for _ in range(n)])
 
     # Step 1b,
     # Initializing the Particles best position as the initial assumptions
@@ -129,7 +130,7 @@ def PSO_testfunction(n, ns, c1, c2, om, k, t, xmin, xmax):
 if __name__ == '__main__':
     global data
     # SETUP######
-    data = np.loadtxt("demofile2.txt", delimiter=',')
+    data = np.loadtxt("./pictures/big_circles_orginaltif.txt", delimiter=',')
 
     particle_number = 150  # number of particles
     Iterations = 600  # number of iterations
@@ -141,12 +142,11 @@ if __name__ == '__main__':
 
     # search range of the gaussian
     xmin = 0
-    xmax = (max(data[:,1]))
+    xmax = (max(data[:, 1]))
 
-    ymax = (max(data[:,0]))
+    ymax = (max(data[:, 0]))
     # maximum velocity
     vmx = k * (xmax - xmin) / 2
-
 
     # ===================================================================================#
 
@@ -160,10 +160,11 @@ if __name__ == '__main__':
     plt.title('Data', pad=10)
     plt.show()
     x = np.linspace(0, 100, 200)
-    index_est_center=np.where(data==ymax)
-    print(index_est_center)
-    Y = modelFunction(ymax,data[index_est_center] , data[index_est_center], x)
-
+    index_est_center = np.where(data[:,0] == ymax)
+    mean = index_est_center[0]
+    mean=mean[1]
+    print(mean )
+    Y = modelFunction(ymax, mean, mean, x)
 
     plt.scatter(x, Y, alpha=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
     plt.xlabel('x')
@@ -181,8 +182,7 @@ if __name__ == '__main__':
     plt.ylabel('y')
     plt.show()
     x = np.linspace(0, 100, 200)
-    Y = modelFunction(best_point[0], best_point[1],best_point[2], x)
-
+    Y = modelFunction(best_point[0], best_point[1], best_point[2], x)
 
     plt.scatter(x, Y, alpha=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
     plt.xlabel('x')
