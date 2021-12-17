@@ -91,36 +91,6 @@ if __name__ == '__main__':
             plt.yticks([])
             count += 1
 
-            #-------------------------------------
-            # N, M = img_edge.shape
-            # if numberOfCircles < 3: 
-
-            #     Nth = (np.floor_divide(M,2)).astype(np.uint8) # number of THETA values in the accumulator array
-            #     Nr = (np.floor_divide(N,2)).astype(np.uint8)  # number of R values in the accumulator array
-            #     K = 30
-
-
-            #     Acc, MaxIDX, MaxTH, MaxR = hough_lines(img_edge, Nth, Nr, K)
-
-
-
-            #     #MaxTH, MaxR = filter_lines(MaxTH, MaxR, 1, 10)
-
-            #     if K > len(MaxTH): K = len(MaxTH)
-
-            #     avg_angles = []
-            #     for line in range(K):
-            #         #oip.plot_line_rth(E, MaxTH[i], MaxR[i], ax)
-            #         #plot_line_rth(M, N, MaxR[line], MaxTH[line], output_axs[count-1])
-
-            #         avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
-
-            #     avg_angle = np.average(avg_angles)
-            #     #avg_angle = np.sum(avg_angles)/K
-            #     print("AVERAGE ANGLE")
-            #     print(avg_angle)
-            # --------------------------------
-
             # Principal component analasys 
             if (numberOfCircles/np.sum(watershed_clusters)) >= 0.9: 
                 #print("This is probably a circle!")
@@ -172,15 +142,20 @@ if __name__ == '__main__':
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
+
+
         if(Write_to_file):
             name = x.replace(".", "")
-            f = open("."+name+"txt", "a")
+            f = open("."+name+".txt", "a")
             for i in range(len(n)):
                 if (n[i] > 0):
-
-                    f.write((n[i]+","+ bins[i]+"/n"))
+                    f.write(str(n[i] + bins[i]))
+                    print("\n")
+                    #f.write((n[i]+","+ bins[i]+"/n"))
             f.write("Now the file has more content!")
             f.close()
+
+        
         xdata = np.linspace(0, 450, 40)
         fittingFunction, cov = scipy.stats.distributions.norm.fit(ForegBackg)
         fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
@@ -278,3 +253,34 @@ if __name__ == '__main__':
     # print(longestPicture)
 
     print("\n\n-----------------------------------------------------")
+
+
+            #-------------------------------------
+            # N, M = img_edge.shape
+            # if numberOfCircles < 3: 
+
+            #     Nth = (np.floor_divide(M,2)).astype(np.uint8) # number of THETA values in the accumulator array
+            #     Nr = (np.floor_divide(N,2)).astype(np.uint8)  # number of R values in the accumulator array
+            #     K = 30
+
+
+            #     Acc, MaxIDX, MaxTH, MaxR = hough_lines(img_edge, Nth, Nr, K)
+
+
+
+            #     #MaxTH, MaxR = filter_lines(MaxTH, MaxR, 1, 10)
+
+            #     if K > len(MaxTH): K = len(MaxTH)
+
+            #     avg_angles = []
+            #     for line in range(K):
+            #         #oip.plot_line_rth(E, MaxTH[i], MaxR[i], ax)
+            #         #plot_line_rth(M, N, MaxR[line], MaxTH[line], output_axs[count-1])
+
+            #         avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
+
+            #     avg_angle = np.average(avg_angles)
+            #     #avg_angle = np.sum(avg_angles)/K
+            #     print("AVERAGE ANGLE")
+            #     print(avg_angle)
+            # --------------------------------
