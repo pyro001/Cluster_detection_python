@@ -47,7 +47,7 @@ def calc_error(args):
 
     for p in data:
         # Calculate the function value for the (x,y) of the point and subtract the z value from this and then square this and add to the total error.
-        e_2 += (modelFunction(args[0], args[1],args[2], p[0]) - p[1]) ** 2
+        e_2 += (modelFunction(args[0], args[1],args[2], p[1]) - p[0]) ** 2
 
     # Return the total error
     return e_2
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     data = np.loadtxt("demofile2.txt", delimiter=',')
 
     particle_number = 150  # number of particles
-    Iterations = 300  # number of iterations
+    Iterations = 600  # number of iterations
     c1 = 2  # cognitive coefficient
     c2 = 2  # social coefficient
     om = 0.9  # inertia weight
