@@ -143,8 +143,9 @@ if __name__ == '__main__':
 
         if (Write_to_file):
             name = x.replace(".", "")
-            name = x.replace("png", "")
-            name = x.replace("tif", "")
+            name = name.replace("png", "")
+            name = name.replace("tif", "")
+            print("Data Storred in ", "." + name + ".txt", "a")
             f = open("." + name + ".txt", "a")
             for i in range(len(n)):
                 if (n[i] > 0):
