@@ -1,4 +1,5 @@
 # v2 - trying to add Tobias segmentation to it
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from numpy import uint8
@@ -70,7 +71,7 @@ if __name__ == '__main__':
             watershed_clusters.append(c)
             m,n= np.shape(img_thresh)
             try:
-                ForegBackg.append(cv2.countNonZero(img_thresh)/(c) )
+                ForegBackg.append(np.floor(cv2.countNonZero(img_thresh)/(c)))
             except ZeroDivisionError:
                 ForegBackg.append(cv2.countNonZero(img_thresh))
             circles = openCv_HoughCircles(img_edge, 12, 6, 12)
@@ -148,8 +149,8 @@ if __name__ == '__main__':
             # count += 1
 
         # Just gathering some data and stuff, not sure how much is relavant or wanted
-        x = watershed_clusters
-        y=ForegBackg ##normalize the data?
+
+
         plt.show()
         #plot rods count histogram
         n, bins, patches = plt.hist(rodArrayCount,20, facecolor='blue', alpha=0.5)
@@ -160,27 +161,24 @@ if __name__ == '__main__':
         plt.show()
         ##the output looks wierd just take a look
         plt.show()
-        n, bins, patches = plt.hist(x,2*max(x), facecolor='blue', alpha=0.5)
+        n, bins, patches = plt.hist(watershed_clusters,2*max(watershed_clusters), facecolor='blue', alpha=0.5)
         print("n", n,"bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
         # num_bins = int(np.ceil(max(y) / 20))
-        n, bins, patches = plt.hist(y,100,  facecolor='red', alpha=0.5)
+        n, bins, patches = plt.hist(ForegBackg,100,  facecolor='red', alpha=0.5)
         print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
-        x = np.linspace(0,450, len(n))
+
         xdata = np.linspace(0, 450, 40)
-        fittingFunction, cov = scipy.stats.distributions.norm.fit(y)
+        fittingFunction, cov = scipy.stats.distributions.norm.fit(ForegBackg)
         fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
         plt.plot(xdata, fitted_data, 'r-')
         #curve_fit(f=gaussian, xdata=x, ydata=n)
         # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
-        plt.show()
-        plt.scatter(x, n)
-        # plt.scatter(xdata,))
         plt.show()
 
 
@@ -265,11 +263,14 @@ if __name__ == '__main__':
     print(totalTime / len(img_array))
     print("\nShortest run time : ")
     print(shortestTime)
-    print("Shortest run time picture : ")
-    print(shortestPicture)
+    plt.title("Shortest run time picture : ")
+    plt.imshow(crop_levels(int(shortestPicture)),cmap="Greys")
+    plt.show()
     print("\nLongest run time : ")
     print(longestTime)
-    print("Longest run time picture : ")
-    print(longestPicture)
-
+    # print("Longest run time picture : ")
+    # print(longestPicture)
+    plt.title("\nLongest run time : ")
+    plt.imshow(crop_levels(int(longestPicture)),cmap="Greys")
+    plt.show()
     print("\n\n-----------------------------------------------------")
