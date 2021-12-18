@@ -19,6 +19,9 @@ if __name__ == '__main__':
     img_array = ['./pictures/big_lines_orginal.tif']
     img_array = ['./pictures/testdata.tif']
 
+    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
+    #img_array= ['./pictures/big_lines_orginal.tif']
+    #img_array = ['./pictures/big_triangles_orginal.png']
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -35,6 +38,15 @@ if __name__ == '__main__':
     linePicture = 'asd'
     trianglePicture = 'asd'
 
+    count_clusters = 0
+    count_foreground_pixels = [[], [], []]
+    count_circles = []
+    count_rods = []
+    count_triangles = []
+
+
+    printOutThings = False 
+
     for x in img_array:  ## loop through all the images images stored in a vector
         # Local variables
         t = time.time()
@@ -44,10 +56,19 @@ if __name__ == '__main__':
         ForegBackg = []
         ForegBackg_Rods = []
         rodArrayCount = []
+        watershed_clusters=[]
+        watershed_clustersC=[]
+        ForegBackg=[]
+        ForegBackgRod=[]
+        rodArrayCount = [] 
         numberOfClusters = 0
         numberOfCircles = 0
+        numberOfClassifyingCircles = 0
         numberOfLine = 0
         numberOfTriangles = 0
+        circleType = False
+        rodType = False
+        triangleType = False 
 
         # Read the image
         img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
@@ -65,6 +86,24 @@ if __name__ == '__main__':
         count = 1
         count_b = 1
 
+        for numbers in range(10):
+            img_edge_classify, img_thresh_classify = pre_conditioning(clusterArray[numbers])
+            img_threshClassify,watershed_imgClassify, cC = locwatershed(cv2.cvtColor(clusterArray[numbers], cv2.COLOR_GRAY2BGR),img_thresh_classify)
+            watershed_clustersC.append(cC)
+            circlesClassify = openCv_HoughCircles(img_edge_classify, 12, 6, 12)
+
+            if circlesClassify is not None:
+                 for things in circlesClassify[0, :]:
+                    numberOfClassifyingCircles  = numberOfClassifyingCircles + 1
+
+            if (numberOfClassifyingCircles/np.sum(watershed_clustersC)) >= 0.9: 
+                circleType = True
+            elif (numberOfClassifyingCircles/np.sum(watershed_clustersC)) >= 0.40: 
+                triangleType = True
+            else: 
+                rodType = True
+
+
         for i in clusterArray:
             numberOfClusters = numberOfClusters + 1
             totalNumberOfClusters = totalNumberOfClusters + 1
@@ -77,52 +116,102 @@ if __name__ == '__main__':
                 ForegBackg.append(np.floor(cv2.countNonZero(img_thresh) / (c)))
             except ZeroDivisionError:
                 ForegBackg.append(cv2.countNonZero(img_thresh))
-            circles = openCv_HoughCircles(img_edge, 12, 6, 12)
-
-            if circles is not None:
-                for j in circles[0, :]:
-                    numberOfCircles = numberOfCircles + 1
-
-            plt.subplot(2 * size, size, count)
-            plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
-            plt.xticks([])
-            plt.yticks([])
-            count += 1
-            plt.subplot(2 * size, size, count)
-            plt.imshow(img_thresh2, 'gray', vmin=0, vmax=255)
-            plt.xticks([])
-            plt.yticks([])
-            count += 1
 
             # Principal component analasys 
-            if (numberOfCircles / np.sum(watershed_clusters)) >= 0.9:
-                # print("This is probably a circle!")
+            if circleType == True: 
+                #print("This is probably a circle!")
+                circles = openCv_HoughCircles(img_edge, 12, 6, 12)
+                if circles is not None:
+                    for j in circles[0, :]:
+                        numberOfCircles = numberOfCircles + 1
                 totalNumberOfCircles = numberOfCircles
                 circlePicture = x
                 circleClusters = numberOfClusters
-            else:
-                if (numberOfCircles / np.sum(watershed_clusters)) >= 0.40:
-                    # print("This is probably a Triangle!")
-                    numberOfTriangles = numberOfTriangles + c
-                    trianglePicture = x
-                    trianglesClusters = numberOfClusters
-                else:
-                    linePicture = x
+                count_circles.append(numberOfCircles)
+            elif triangleType == True:
+                #print("This is probably a Triangle!")
+                numberOfTriangles = numberOfTriangles + c
+                trianglePicture = x
+                trianglesClusters = numberOfClusters
+                count_triangles.append(numberOfTriangles)
+            elif rodType == True: 
+                linePicture = x
+                ##momentarily commented // this is annoyingly slow
+                # # Try to detect lines in the image
+                img_lines, numberOfLines = countRods(i)
+                rodArrayCount.append(numberOfLines)
+                try:
+                    ForegBackgRod.append(cv2.countNonZero(img_thresh)/(numberOfLines) )
+                except ZeroDivisionError:
+                    pass
+            else: 
+                print("-------------------------\n\n[ERROR] - Unable to classify cluster type!! \n\n-------------------------")
 
-                    # # Try to detect lines in the image
-                    img_lines, numberOfLines = countRods(i)
-                    rodArrayCount.append(numberOfLines)
-                    try:
-                        ForegBackg_Rods.append(np.floor(cv2.countNonZero(img_thresh) / (numberOfLines)))
-                    except ZeroDivisionError:
-                        ForegBackg_Rods.append(cv2.countNonZero(img_thresh))
+            count_foreground_pixels[img_array.index(x)].append((np.count_nonzero(img_thresh)/img_thresh.size)*100)
 
-            # plt.subplot(size, size, count)
-            # plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
-            # plt.xticks([])
-            # plt.yticks([])
-            # count += 1
+            if printOutThings == True:
+                # Basic plotting 
+                plt.subplot(2*size, size, count)
+                plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
+                plt.xticks([])
+                plt.yticks([])
+                count += 1
+                plt.subplot(2 * size,  size, count)
+                plt.imshow(img_thresh2, 'gray', vmin=0, vmax=255)
+                plt.xticks([])
+                plt.yticks([])
+                count += 1
+            
+        if printOutThings == True:
+            x = watershed_clusters
+            y=ForegBackg ##normalize the data?
+            plt.show()
+            #plot rods count histogram
+            n, bins, patches = plt.hist(rodArrayCount,20, facecolor='blue', alpha=0.5)
+            print("n", n,"bins", bins, "patches", patches)
+            plt.xlabel('Bins')
+            plt.ylabel('Frequency')
+            plt.title('Rods Nr particles')
+            plt.show()
+            #plot area per rod using lines
+            n, bins, patches = plt.hist(ForegBackgRod,bins=40,  facecolor='red', alpha=0.5)
+            print("n", n, "bins", bins, "patches", patches)
+            plt.xlabel('Bins')
+            plt.ylabel('Frequency')
+            plt.title('Area per perticle lines')
+            plt.show()
+            ##the output looks wierd just take a look
+            plt.show()
+            n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
+            print("n", n,"bins", bins, "patches", patches)
+            plt.xlabel('Bins')
+            plt.ylabel('Frequency')
+            plt.title('Nr particles watershed')
+            plt.show()
+            # num_bins = int(np.ceil(max(y) / 20))
+            n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
+            print("n", n, "bins", bins, "patches", patches)
+            plt.xlabel('Bins')
+            plt.ylabel('Frequency')
+            plt.title('Area per perticle watershed')
+            plt.show()
+            x = np.linspace(0,450, len(n))
+            xdata = np.linspace(0, 450, 40)
+            fittingFunction, cov = scipy.stats.distributions.norm.fit(y)
+            fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
+            plt.plot(xdata, fitted_data, 'r-')
+            #curve_fit(f=gaussian, xdata=x, ydata=n)
+            # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
+            plt.show()
+            plt.scatter(x, n)
+            # plt.scatter(xdata,))
+            plt.show()
 
+
+            elapse = time.time() - t
+            if elapse <= shortestTime:
+                shortestTime = elapse
+                shortestPicture = x
         # Just gathering some data and stuff, not sure how much is relavant or wanted
 
         plt.show()
@@ -167,42 +256,37 @@ if __name__ == '__main__':
         # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
         plt.show()
 
-        elapse = time.time() - t
-        if elapse <= shortestTime:
-            shortestTime = elapse
-            shortestPicture = x
+            if elapse >= longestTime:
+                longestTime = elapse
+                longestPicture = x
 
-        if elapse >= longestTime:
-            longestTime = elapse
-            longestPicture = x
+            totalTime = totalTime + elapse
 
-        totalTime = totalTime + elapse
+            print("-----------------------------------------------------\n\n")
+            print("Currenct picture : ")
+            print(x)
+            print("Number of Clusters : ")
+            print(numberOfClusters)
+            print("Particles vs Circles ratio : ")
+            print(numberOfCircles/np.sum(watershed_clusters))
+            print("Number of Circles in clusters with Hough Line detect : ")
+            print(numberOfCircles)
+            print("Number of particles in clusters with watersheading : ")
+            print(np.sum(watershed_clusters))
+            print("Number of Lines in clusters : ")
+            print(numberOfLine)
+            print("Number of Triangles in clusters : ")
+            print(numberOfTriangles)
 
-        print("-----------------------------------------------------\n\n")
-        print("Currenct picture : ")
-        print(x)
-        print("Number of Clusters : ")
-        print(numberOfClusters)
-        print("Particles vs Circles ratio : ")
-        print(numberOfCircles / np.sum(watershed_clusters))
-        print("Number of Circles in clusters with Hough Line detect : ")
-        print(numberOfCircles)
-        print("Number of particles in clusters with watersheading : ")
-        print(np.sum(watershed_clusters))
-        print("Number of Lines in clusters : ")
-        print(numberOfLine)
-        print("Number of Triangles in clusters : ")
-        print(numberOfTriangles)
+            print("Run time : ")
+            print(elapse)
 
-        print("Run time : ")
-        print(elapse)
-
-        print("Mean size of a cluster: ", round(np.mean(watershed_clusters), 2),
-              " Median size of a cluster: ", round(np.median(watershed_clusters), 2),
-              " Standard deviation of cluster size: ", round(np.std(watershed_clusters), 2),
-              " Variance of cluster size: ", round(np.var(watershed_clusters), 2))
-        print("\n\n-----------------------------------------------------")
-        # plt.show()
+            print("Mean size of a cluster: ", round(np.mean(watershed_clusters),2),
+            " Median size of a cluster: ", round(np.median(watershed_clusters),2), 
+            " Standard deviation of cluster size: ",round(np.std(watershed_clusters),2),
+            " Variance of cluster size: ",round(np.var(watershed_clusters),2))
+            print("\n\n-----------------------------------------------------")
+            #plt.show()
 
     print("------------------------ Data Stuff ------------------\n\n")
     print("Total number of Clusters : ")
@@ -255,29 +339,103 @@ if __name__ == '__main__':
 
     print("\n\n-----------------------------------------------------")
 
-    # -------------------------------------
-    # N, M = img_edge.shape
-    # if numberOfCircles < 3:
 
-    #     Nth = (np.floor_divide(M,2)).astype(np.uint8) # number of THETA values in the accumulator array
-    #     Nr = (np.floor_divide(N,2)).astype(np.uint8)  # number of R values in the accumulator array
-    #     K = 30
+    fig, axs1 = plt.subplots(4, 1)
+    fig, axs2 = plt.subplots(1, 2)
+    fig, axs3 = plt.subplots(1, 2)
+    fig, axs4 = plt.subplots(1, 2)
 
-    #     Acc, MaxIDX, MaxTH, MaxR = hough_lines(img_edge, Nth, Nr, K)
+    axs1[0].set_xlabel('Bins')
+    axs1[0].set_ylabel('Frequency')
+    axs1[0].set_title('Foreground pixels as percentage of all pixels')
+    axs1[1].set_xlabel('Bins')
+    axs1[1].set_ylabel('Frequency')
+    axs1[1].set_title('Foreground pixels as percentage of all pixels')
+    axs1[2].set_xlabel('Bins')
+    axs1[2].set_ylabel('Frequency')
+    axs1[2].set_title('Foreground pixels as percentage of all pixels')
+    axs1[3].set_xlabel('Bins')
+    axs1[3].set_ylabel('Frequency')
+    axs1[3].set_title('Foreground pixels as percentage of all pixels')
 
-    #     #MaxTH, MaxR = filter_lines(MaxTH, MaxR, 1, 10)
+    axs2[0].set_title('Number of particles per circle cluster')
+    axs3[0].set_title('Number of particles per rod cluster')
+    axs4[0].set_title('Number of particles per triangle cluster')
 
-    #     if K > len(MaxTH): K = len(MaxTH)
+    count_circles = np.array(count_circles)
+    count_rods = np.array(count_rods)
+    count_triangles = np.array(count_triangles)
 
-    #     avg_angles = []
-    #     for line in range(K):
-    #         #oip.plot_line_rth(E, MaxTH[i], MaxR[i], ax)
-    #         #plot_line_rth(M, N, MaxR[line], MaxTH[line], output_axs[count-1])
+    print(count_triangles)
+    print(count_rods)
 
-    #         avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
+    print("FOREGROUND PIXELS")
+    axs1[0].hist(count_foreground_pixels, numberOfClusters, color=["red", "green", "blue"])
+    axs1[1].hist(count_foreground_pixels[0], len(count_foreground_pixels[0]), color="red")
+    axs1[2].hist(count_foreground_pixels[1], len(count_foreground_pixels[1]), color="green")
+    axs1[3].hist(count_foreground_pixels[2], len(count_foreground_pixels[2]), color="blue")
+    
+    axs2[0].boxplot(count_circles)
+    axs2[1].violinplot(count_circles)
 
-    #     avg_angle = np.average(avg_angles)
-    #     #avg_angle = np.sum(avg_angles)/K
-    #     print("AVERAGE ANGLE")
-    #     print(avg_angle)
-    # --------------------------------
+    #axs3[0].boxplot(count_rods)
+    #axs3[1].violinplot(count_rods)
+
+    #axs4[0].boxplot(count_triangles)
+    #axs4[1].violinplot(count_triangles)
+
+
+
+    # print("CIRCLES")
+    # axs2[0].hist(count_circles, count_circles.size, color=["red", "green", "blue"])
+    # axs2[1].hist(count_circles[0], len(count_circles[0]), color="red")
+    # axs2[2].hist(count_circles[1], len(count_circles[1]), color="green")
+    # axs2[3].hist(count_circles[2], len(count_circles[2]), color="blue")
+    
+
+    # print("RODS")
+    # axs3[0].hist(count_rods, count_rods.size, color=["red", "green", "blue"])
+    # axs3[1].hist(count_rods[0], len(count_rods[0]), color="red")
+    # axs3[2].hist(count_rods[1], len(count_rods[1]), color="green")
+    # axs3[3].hist(count_rods[2], len(count_rods[2]), color="blue")
+    
+
+    # print("TRIANGLES")
+    # axs4[0].hist(count_triangles, count_triangles.size, color=["red", "green", "blue"])
+    # axs4[1].hist(count_triangles[0], len(count_triangles[0]), color="red")
+    # axs4[2].hist(count_triangles[1], len(count_triangles[1]), color="green")
+    # axs4[3].hist(count_triangles[2], len(count_triangles[2]), color="blue")
+    plt.show()
+
+
+
+
+                #-------------------------------------
+            # N, M = img_edge.shape
+            # if numberOfCircles < 3: 
+
+            #     Nth = (np.floor_divide(M,2)).astype(np.uint8) # number of THETA values in the accumulator array
+            #     Nr = (np.floor_divide(N,2)).astype(np.uint8)  # number of R values in the accumulator array
+            #     K = 30
+
+
+            #     Acc, MaxIDX, MaxTH, MaxR = hough_lines(img_edge, Nth, Nr, K)
+
+
+
+            #     #MaxTH, MaxR = filter_lines(MaxTH, MaxR, 1, 10)
+
+            #     if K > len(MaxTH): K = len(MaxTH)
+
+            #     avg_angles = []
+            #     for line in range(K):
+            #         #oip.plot_line_rth(E, MaxTH[i], MaxR[i], ax)
+            #         #plot_line_rth(M, N, MaxR[line], MaxTH[line], output_axs[count-1])
+
+            #         avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
+
+            #     avg_angle = np.average(avg_angles)
+            #     #avg_angle = np.sum(avg_angles)/K
+            #     print("AVERAGE ANGLE")
+            #     print(avg_angle)
+            # --------------------------------
