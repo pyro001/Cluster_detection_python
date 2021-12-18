@@ -15,9 +15,10 @@ Write_to_file = True
 
 if __name__ == '__main__':
     # img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
-    img_array = ['./pictures/big_circles_orginal.tif']
-    # img_array = './pictures/big_triangles_orginal.png'
-    # img_array = ['./pictures/big_triangles_orginal.png']
+    # img_array = ['./pictures/big_circles_orginal.tif']
+    img_array = ['./pictures/big_lines_orginal.tif']
+    img_array = ['./pictures/testdata.tif']
+
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -106,10 +107,15 @@ if __name__ == '__main__':
                     trianglesClusters = numberOfClusters
                 else:
                     linePicture = x
-                    ##momentarily commented // this is annoyingly slow
+                    
                     # # Try to detect lines in the image
                     img_lines, numberOfLines = countRods(i)
                     rodArrayCount.append(numberOfLines)
+                    try:
+                        ForegBackg.pop()
+                        ForegBackg.append(np.floor(cv2.countNonZero(img_thresh) / (numberOfLines)))
+                    except ZeroDivisionError:
+                        ForegBackg.append(cv2.countNonZero(img_thresh))
 
             # plt.subplot(size, size, count)
             # plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
@@ -135,7 +141,7 @@ if __name__ == '__main__':
         plt.ylabel('Frequency')
         plt.show()
         # num_bins = int(np.ceil(max(y) / 20))
-        n, bins, patches = plt.hist(ForegBackg, 100, facecolor='red', alpha=0.5)
+        n, bins, patches = plt.hist(ForegBackg, facecolor='red', alpha=0.5)
         print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')

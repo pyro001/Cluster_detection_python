@@ -130,7 +130,7 @@ def PSO_testfunction(n, ns, c1, c2, om, k, t, xmin, xmax):
 if __name__ == '__main__':
     global data
     # SETUP######
-    data = np.loadtxt("./pictures/big_circles_orginaltif.txt", delimiter=',')
+    data = np.loadtxt("./pictures/big_lines_orginal.txt", delimiter=',')
 
     particle_number = 150  # number of particles
     Iterations = 600  # number of iterations
@@ -162,8 +162,14 @@ if __name__ == '__main__':
     x = np.linspace(0, 100, 200)
     index_est_center = np.where(data[:,0] == ymax)
     mean = index_est_center[0]
-    mean=mean[1]
-    print(mean )
+    try:
+        mean=mean[1]
+        print(mean)
+    except IndexError:
+        mean=mean
+
+
+
     Y = modelFunction(ymax, mean, mean, x)
 
     plt.scatter(x, Y, alpha=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
@@ -176,12 +182,12 @@ if __name__ == '__main__':
     ## plot the stuff
 
     plt.title('Supplied Experimental Data & Function', size=16, y=0.95)
-    plt.scatter(*data.T, marker='o', c=np.random.rand(len(data)))
+    plt.scatter(*data.T, marker='o')
 
     plt.xlabel('x')
     plt.ylabel('y')
     plt.show()
-    x = np.linspace(0, 100, 200)
+    x = np.linspace(0, 2*int(xmax), 200)
     Y = modelFunction(best_point[0], best_point[1], best_point[2], x)
 
     plt.scatter(x, Y, alpha=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
