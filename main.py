@@ -159,57 +159,56 @@ if __name__ == '__main__':
                 plt.xticks([])
                 plt.yticks([])
                 count += 1
-            
-        if printOutThings == True:
-            x = watershed_clusters
-            y=ForegBackg ##normalize the data?
-            plt.show()
-            #plot rods count histogram
-            n, bins, patches = plt.hist(rodArrayCount,20, facecolor='blue', alpha=0.5)
-            print("n", n,"bins", bins, "patches", patches)
-            plt.xlabel('Bins')
-            plt.ylabel('Frequency')
-            plt.title('Rods Nr particles')
-            plt.show()
-            #plot area per rod using lines
-            n, bins, patches = plt.hist(ForegBackgRod,bins=40,  facecolor='red', alpha=0.5)
-            print("n", n, "bins", bins, "patches", patches)
-            plt.xlabel('Bins')
-            plt.ylabel('Frequency')
-            plt.title('Area per perticle lines')
-            plt.show()
-            ##the output looks wierd just take a look
-            plt.show()
-            n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
-            print("n", n,"bins", bins, "patches", patches)
-            plt.xlabel('Bins')
-            plt.ylabel('Frequency')
-            plt.title('Nr particles watershed')
-            plt.show()
-            # num_bins = int(np.ceil(max(y) / 20))
-            n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
-            print("n", n, "bins", bins, "patches", patches)
-            plt.xlabel('Bins')
-            plt.ylabel('Frequency')
-            plt.title('Area per perticle watershed')
-            plt.show()
-            x = np.linspace(0,450, len(n))
-            xdata = np.linspace(0, 450, 40)
-            fittingFunction, cov = scipy.stats.distributions.norm.fit(y)
-            fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
-            plt.plot(xdata, fitted_data, 'r-')
-            #curve_fit(f=gaussian, xdata=x, ydata=n)
-            # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
-            plt.show()
-            plt.scatter(x, n)
-            # plt.scatter(xdata,))
-            plt.show()
+        
+        x = watershed_clusters
+        y=ForegBackg ##normalize the data?
+        plt.show()
+        #plot rods count histogram
+        n, bins, patches = plt.hist(rodArrayCount,20, facecolor='blue', alpha=0.5)
+        print("n", n,"bins", bins, "patches", patches)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.title('Rods Nr particles')
+        plt.show()
+        #plot area per rod using lines
+        n, bins, patches = plt.hist(ForegBackgRod,bins=40,  facecolor='red', alpha=0.5)
+        print("n", n, "bins", bins, "patches", patches)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.title('Area per perticle lines')
+        plt.show()
+        ##the output looks wierd just take a look
+        plt.show()
+        n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
+        print("n", n,"bins", bins, "patches", patches)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.title('Nr particles watershed')
+        plt.show()
+        # num_bins = int(np.ceil(max(y) / 20))
+        n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
+        print("n", n, "bins", bins, "patches", patches)
+        plt.xlabel('Bins')
+        plt.ylabel('Frequency')
+        plt.title('Area per perticle watershed')
+        plt.show()
+        x = np.linspace(0,450, len(n))
+        xdata = np.linspace(0, 450, 40)
+        fittingFunction, cov = scipy.stats.distributions.norm.fit(y)
+        fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
+        plt.plot(xdata, fitted_data, 'r-')
+        #curve_fit(f=gaussian, xdata=x, ydata=n)
+        # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
+        plt.show()
+        plt.scatter(x, n)
+        # plt.scatter(xdata,))
+        plt.show()
 
 
-            elapse = time.time() - t
-            if elapse <= shortestTime:
-                shortestTime = elapse
-                shortestPicture = x
+        elapse = time.time() - t
+        if elapse <= shortestTime:
+            shortestTime = elapse
+            shortestPicture = x
         # Just gathering some data and stuff, not sure how much is relavant or wanted
 
         plt.show()
