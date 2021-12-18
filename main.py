@@ -17,11 +17,9 @@ if __name__ == '__main__':
     # img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
     # img_array = ['./pictures/big_circles_orginal.tif']
     img_array = ['./pictures/big_lines_orginal.tif']
-    img_array = ['./pictures/testdata.tif']
+    # img_array = ['./pictures/testdata.tif']
 
-    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
-    #img_array= ['./pictures/big_lines_orginal.tif']
-    #img_array = ['./pictures/big_triangles_orginal.png']
+
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -217,7 +215,7 @@ if __name__ == '__main__':
         plt.show()
         # plot rods count histogram
         n, bins, patches = plt.hist(rodArrayCount, 20, facecolor='blue', alpha=0.5)
-        print("n", n, "bins", bins, "patches", patches)
+        # print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.title('Rods')
@@ -225,13 +223,13 @@ if __name__ == '__main__':
         ##the output looks wierd just take a look
         plt.show()
         n, bins, patches = plt.hist(watershed_clusters, 2 * max(watershed_clusters), facecolor='blue', alpha=0.5)
-        print("n", n, "bins", bins, "patches", patches)
+        # print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
         # num_bins = int(np.ceil(max(y) / 20))
         n, bins, patches = plt.hist(ForegBackg, facecolor='red', alpha=0.5)
-        print("n", n, "bins", bins, "patches", patches)
+        # print("n", n, "bins", bins, "patches", patches)
         plt.xlabel('Bins')
         plt.ylabel('Frequency')
         plt.show()
@@ -256,37 +254,37 @@ if __name__ == '__main__':
         # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
         plt.show()
 
-            if elapse >= longestTime:
-                longestTime = elapse
-                longestPicture = x
+        if elapse >= longestTime:
+            longestTime = elapse
+            longestPicture = x
 
-            totalTime = totalTime + elapse
+        totalTime = totalTime + elapse
 
-            print("-----------------------------------------------------\n\n")
-            print("Currenct picture : ")
-            print(x)
-            print("Number of Clusters : ")
-            print(numberOfClusters)
-            print("Particles vs Circles ratio : ")
-            print(numberOfCircles/np.sum(watershed_clusters))
-            print("Number of Circles in clusters with Hough Line detect : ")
-            print(numberOfCircles)
-            print("Number of particles in clusters with watersheading : ")
-            print(np.sum(watershed_clusters))
-            print("Number of Lines in clusters : ")
-            print(numberOfLine)
-            print("Number of Triangles in clusters : ")
-            print(numberOfTriangles)
+        print("-----------------------------------------------------\n\n")
+        print("Currenct picture : ")
+        print(x)
+        print("Number of Clusters : ")
+        print(numberOfClusters)
+        print("Particles vs Circles ratio : ")
+        print(numberOfCircles/np.sum(watershed_clusters))
+        print("Number of Circles in clusters with Hough Line detect : ")
+        print(numberOfCircles)
+        print("Number of particles in clusters with watersheading : ")
+        print(np.sum(watershed_clusters))
+        print("Number of Lines in clusters : ")
+        print(numberOfLine)
+        print("Number of Triangles in clusters : ")
+        print(numberOfTriangles)
 
-            print("Run time : ")
-            print(elapse)
+        print("Run time : ")
+        print(elapse)
 
-            print("Mean size of a cluster: ", round(np.mean(watershed_clusters),2),
-            " Median size of a cluster: ", round(np.median(watershed_clusters),2), 
-            " Standard deviation of cluster size: ",round(np.std(watershed_clusters),2),
-            " Variance of cluster size: ",round(np.var(watershed_clusters),2))
-            print("\n\n-----------------------------------------------------")
-            #plt.show()
+        print("Mean size of a cluster: ", round(np.mean(watershed_clusters),2),
+        " Median size of a cluster: ", round(np.median(watershed_clusters),2),
+        " Standard deviation of cluster size: ",round(np.std(watershed_clusters),2),
+        " Variance of cluster size: ",round(np.var(watershed_clusters),2))
+        print("\n\n-----------------------------------------------------")
+        #plt.show()
 
     print("------------------------ Data Stuff ------------------\n\n")
     print("Total number of Clusters : ")
