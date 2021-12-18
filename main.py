@@ -42,6 +42,7 @@ if __name__ == '__main__':
         circleArray = []  # This should also maybe be global?
         watershed_clusters = []
         ForegBackg = []
+        ForegBackg_Rods = []
         rodArrayCount = []
         numberOfClusters = 0
         numberOfCircles = 0
@@ -107,15 +108,14 @@ if __name__ == '__main__':
                     trianglesClusters = numberOfClusters
                 else:
                     linePicture = x
-                    
+
                     # # Try to detect lines in the image
                     img_lines, numberOfLines = countRods(i)
                     rodArrayCount.append(numberOfLines)
                     try:
-                        ForegBackg.pop()
-                        ForegBackg.append(np.floor(cv2.countNonZero(img_thresh) / (numberOfLines)))
+                        ForegBackg_Rods.append(np.floor(cv2.countNonZero(img_thresh) / (numberOfLines)))
                     except ZeroDivisionError:
-                        ForegBackg.append(cv2.countNonZero(img_thresh))
+                        ForegBackg_Rods.append(cv2.countNonZero(img_thresh))
 
             # plt.subplot(size, size, count)
             # plt.imshow(watershed_img, 'gray', vmin=0, vmax=255)
