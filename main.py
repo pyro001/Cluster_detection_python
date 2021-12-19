@@ -2,6 +2,7 @@ from lib.OIP21_group3 import *
 
 if __name__ == '__main__':
     img_array = ['./pictures/001_002.tif', './pictures/R001_001.tif', './pictures/T001.png']
+    img_array = ['./pictures/R001_001.tif']
 
     totalNumberOfClusters = 0  
     totalNumberOfParticles = 0 
@@ -28,8 +29,8 @@ if __name__ == '__main__':
     totalNumberOfLines = 0
 
 
-    printOutThings = True
-    writeToFile = True
+    printOutThings = False
+    writeToFile = True 
 
     for image_name in img_array:
         t = time.time()
@@ -271,17 +272,20 @@ if __name__ == '__main__':
 
     axs1[0].hist(count_foreground_pixels, numberOfClusters, color=["red", "green", "blue"])
     axs1[1].hist(count_foreground_pixels[0], len(count_foreground_pixels[0]), color="red")
-    axs1[2].hist(count_foreground_pixels[1], len(count_foreground_pixels[1]), color="green")
-    axs1[3].hist(count_foreground_pixels[2], len(count_foreground_pixels[2]), color="blue")
+    #axs1[2].hist(count_foreground_pixels[1], len(count_foreground_pixels[1]), color="green")
+    #axs1[3].hist(count_foreground_pixels[2], len(count_foreground_pixels[2]), color="blue")
     
-    axs2[0].boxplot(count_circles)
-    axs2[1].violinplot(count_circles)
+    if len(count_circles) != 0: 
+        axs2[0].boxplot(count_circles)
+        axs2[1].violinplot(count_circles)
 
-    axs3[0].boxplot(count_rods)
-    axs3[1].violinplot(count_rods)
+    if len(count_rods) != 0:
+        axs3[0].boxplot(count_rods)
+        axs3[1].violinplot(count_rods)
 
-    axs4[0].boxplot(count_triangles)
-    axs4[1].violinplot(count_triangles)
+    if len(count_triangles) != 0: 
+        axs4[0].boxplot(count_triangles)
+        axs4[1].violinplot(count_triangles)
     #plt.show()
 
 
