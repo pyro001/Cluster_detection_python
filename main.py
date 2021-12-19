@@ -1,24 +1,12 @@
-# v2 - trying to add Tobias segmentation to it
-import numpy as np
-import scipy
-from numpy import uint8
-from scipy import interpolate
-from scipy.optimize import curve_fit
-
-from OIP21_lib_ImageProcessing_V6 import *
-import cv2  # Some of the things in other library took to long
-import math
-import time
-
+from OIP21_group3 import *
 
 if __name__ == '__main__':
     img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
-    #img_array= ['./pictures/big_lines_orginal.tif']
-    #img_array = ['./pictures/big_triangles_orginal.png']
-    # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
+
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
     totalNumberOfCircles = 0  # from hough transform
+    lineClusterCount = 0
 
     totalTime = 0
     shortestTime = 900000000
@@ -38,8 +26,8 @@ if __name__ == '__main__':
     count_triangles = []
 
 
-    printOutThings = False 
-    writeToFile = True
+    printOutThings = False
+    writeToFile = False
 
     for x in img_array:  ## loop through all the images images stored in a vector
         # Local variables
@@ -53,9 +41,8 @@ if __name__ == '__main__':
         rodArrayCount = [] 
         numberOfClusters = 0
         numberOfCircles = 0
+        totalNumberOfLines = 0
         numberOfClassifyingCircles = 0
-        numberOfLine = 0
-        lineClusters = 0
         numberOfTriangles = 0
         trianglesClusters = 0
         circleType = False
@@ -126,8 +113,9 @@ if __name__ == '__main__':
                 count_triangles.append(c)
             elif rodType == True: 
                 linePicture = x
-                lineClusters = numberOfClusters
+                lineClusterCount = numberOfClusters
                 img_lines, numberOfLines = countRods(i)
+                totalNumberOfLines = totalNumberOfLines + numberOfLines
                 rodArrayCount.append(numberOfLines)
                 try:
                     ForegBackgRod.append(cv2.countNonZero(img_thresh)/(numberOfLines) )
@@ -146,7 +134,7 @@ if __name__ == '__main__':
                 plt.yticks([])
                 count += 1
                 plt.subplot(2 * size,  size, count)
-                plt.imshow(img_thresh2, 'gray', vmin=0, vmax=255)
+                plt.imshow(i, 'gray', vmin=0, vmax=255)
                 plt.xticks([])
                 plt.yticks([])
                 count += 1
@@ -238,15 +226,15 @@ if __name__ == '__main__':
         print("Average number of circles in clusters : ")             
         print(totalNumberOfCircles / circleClusters)
 
-    if lineClusters != 0:   
+    if lineClusterCount != 0:   
         print("\n\nPicture with most ammout of lines")
         print(linePicture)
         print("Number of Clusters in picture")
-        print(lineClusters) ## not defined
+        print(lineClusterCount) ## not defined
         print("Number of Lines in picture : ")
-        print(numberOfLine)
+        print(totalNumberOfLines)
         print("Average number of lines in clusters : ")
-        print(numberOfLine / lineClusters)
+        print(totalNumberOfLines / lineClusterCount)
 
     if trianglesClusters != 0: 
         print("\n\nPicture with most ammount of Triangles : ")
@@ -318,11 +306,11 @@ if __name__ == '__main__':
     axs2[0].boxplot(count_circles)
     axs2[1].violinplot(count_circles)
 
-    #axs3[0].boxplot(count_rods)
-    #axs3[1].violinplot(count_rods)
+    axs3[0].boxplot(count_rods)
+    axs3[1].violinplot(count_rods)
 
-    #axs4[0].boxplot(count_triangles)
-    #axs4[1].violinplot(count_triangles)
+    axs4[0].boxplot(count_triangles)
+    axs4[1].violinplot(count_triangles)
 
 
 
