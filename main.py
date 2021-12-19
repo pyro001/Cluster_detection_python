@@ -137,7 +137,7 @@ if __name__ == '__main__':
                 plt.xticks([])
                 plt.yticks([])
                 count += 1
-            
+
         if printOutThings == True:
             x = watershed_clusters
             y=ForegBackg ##normalize the data?
