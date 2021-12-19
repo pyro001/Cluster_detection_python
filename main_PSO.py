@@ -110,7 +110,7 @@ def PSO_testfunction(n, ns, c1, c2, om, k, t, xmin, xmax):
 if __name__ == '__main__':
     global data
     # SETUP######
-    data = np.loadtxt("./pictures/big_lines_orginal.txt", delimiter=',')
+    data = np.loadtxt("T001.txt", delimiter=',')
 
     particle_number = 150  # number of particles
     Iterations = 600  # number of iterations
