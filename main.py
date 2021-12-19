@@ -154,7 +154,7 @@ if __name__ == '__main__':
                 print("n", n, "bins", bins, "patches", patches)
                 plt.xlabel('Bins')
                 plt.ylabel('Frequency')
-                plt.title('Area per perticle lines')
+                plt.title('Area per particle lines')
                 plt.show()
 
             if rodType == False:
@@ -169,7 +169,7 @@ if __name__ == '__main__':
                 print("n", n, "bins", bins, "patches", patches)
                 plt.xlabel('Bins')
                 plt.ylabel('Frequency')
-                plt.title('Area per perticle watershed')
+                plt.title('Area per particle watershed')
                 plt.show()
 
             xdata = np.linspace(0, 450, 40)
@@ -184,6 +184,7 @@ if __name__ == '__main__':
                 name = image_name.replace(".", "")
                 name = name.replace("png", "")
                 name = name.replace("tif", "")
+                name = name.replace("pictures", "")
                 print("Data Storred in ", "." + name + ".txt", "a")
                 f = open("." + name + ".txt", "a")
                 for i in range(len(n)):
