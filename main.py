@@ -28,7 +28,7 @@ if __name__ == '__main__':
     totalNumberOfLines = 0
 
 
-    printOutThings = False
+    printOutThings = True
     writeToFile = False
 
     for x in img_array:  
@@ -286,6 +286,7 @@ if __name__ == '__main__':
     axs4[0].boxplot(count_triangles)
     axs4[1].violinplot(count_triangles)
     #plt.show()
+
 
     #-----------------   First idea of rod counting  --------------------
     # N, M = img_edge.shape
