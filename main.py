@@ -24,12 +24,14 @@ if __name__ == '__main__':
     count_circles = []
     count_rods = []
     count_triangles = []
+    
+    totalNumberOfLines = 0
 
 
-    printOutThings = False  
+    printOutThings = False
     writeToFile = False
 
-    for x in img_array:  # loop through all the images images stored in a vector
+    for x in img_array:  
         t = time.time()
         clusterArray = [] 
         circleArray = []  
@@ -39,7 +41,6 @@ if __name__ == '__main__':
         ForegBackgRod=[] 
         numberOfClusters = 0
         numberOfCircles = 0
-        totalNumberOfLines = 0
         numberOfClassifyingCircles = 0
         numberOfTriangles = 0
         trianglesClusters = 0
@@ -141,45 +142,44 @@ if __name__ == '__main__':
             x = watershed_clusters
             y=ForegBackg ##normalize the data?
             plt.show()
-            #plot rods count histogram
+
             n, bins, patches = plt.hist(count_rods,20, facecolor='blue', alpha=0.5)
             print("n", n,"bins", bins, "patches", patches)
             plt.xlabel('Bins')
             plt.ylabel('Frequency')
             plt.title('Rods Nr particles')
             plt.show()
-            #plot area per rod using lines
+
             n, bins, patches = plt.hist(ForegBackgRod,bins=40,  facecolor='red', alpha=0.5)
             print("n", n, "bins", bins, "patches", patches)
             plt.xlabel('Bins')
             plt.ylabel('Frequency')
             plt.title('Area per perticle lines')
             plt.show()
-            ##the output looks wierd just take a look
-            plt.show()
+
             n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
             print("n", n,"bins", bins, "patches", patches)
             plt.xlabel('Bins')
             plt.ylabel('Frequency')
             plt.title('Nr particles watershed')
             plt.show()
-            # num_bins = int(np.ceil(max(y) / 20))
+
             n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
             print("n", n, "bins", bins, "patches", patches)
             plt.xlabel('Bins')
             plt.ylabel('Frequency')
             plt.title('Area per perticle watershed')
             plt.show()
+
             x = np.linspace(0,450, len(n))
             xdata = np.linspace(0, 450, 40)
             fittingFunction, cov = scipy.stats.distributions.norm.fit(y)
             fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
             plt.plot(xdata, fitted_data, 'r-')
-            #curve_fit(f=gaussian, xdata=x, ydata=n)
             # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
             plt.show()
+
             plt.scatter(x, n)
-            # plt.scatter(xdata,))
             plt.show()
 
             if (writeToFile):
@@ -211,60 +211,38 @@ if __name__ == '__main__':
         totalTime = totalTime + elapse
 
     print("------------------------ Text Printout ------------------\n\n")
-    print("Total number of Clusters : ")
-    print(totalNumberOfClusters)
+    print("Total number of Clusters : ", totalNumberOfClusters)
     
     if circleClusters != 0: 
-        print("\n\nPicture with most ammount of Circles : ")
-        print(circlePicture)
-        print("Number of Clusters in picture")
-        print(circleClusters)
-        print("Number of Circles in picture : ")
-        print(totalNumberOfCircles)
-        print("Average number of circles in clusters : ")             
-        print(totalNumberOfCircles / circleClusters)
+        print("\n\nPicture with most ammount of Circles : ", circlePicture,
+        "\nNumber of Clusters in picture : ", circleClusters, 
+        "\nNumber of Circles in picture : ", totalNumberOfCircles, 
+        "\nAverage number of circles in clusters : ", totalNumberOfCircles / circleClusters)
 
     if lineClusterCount != 0:   
-        print("\n\nPicture with most ammout of lines")
-        print(linePicture)
-        print("Number of Clusters in picture")
-        print(lineClusterCount) ## not defined
-        print("Number of Lines in picture : ")
-        print(totalNumberOfLines)
-        print("Average number of lines in clusters : ")
-        print(totalNumberOfLines / lineClusterCount)
+        print("\n\nPicture with most ammout of lines : ", linePicture,
+        "\nNumber of Clusters in picture : ", lineClusterCount, 
+        "\nNumber of Lines in picture : ", totalNumberOfLines, 
+        "\nAverage number of lines in clusters : ", totalNumberOfLines / lineClusterCount)
 
     if trianglesClusters != 0: 
-        print("\n\nPicture with most ammount of Triangles : ")
-        print(trianglePicture)
-        print("Numver of Clusters in picture")
-        print(trianglesClusters)
-        print("Number of Triangles in clusters : ")
-        print(numberOfTriangles)
-        print("Average number of Triangles in clusters : ")           
-        print(numberOfTriangles / trianglesClusters)
+        print("\n\nPicture with most ammount of Triangles : ", trianglePicture, 
+        "\nNumber of Clusters in picture : ", trianglesClusters, 
+        "\nNumber of Triangles in clusters : ", numberOfTriangles, 
+        "\nAverage number of Triangles in clusters : ", numberOfTriangles / trianglesClusters)
 
-    print("Mean number of a cluster particles: ", round(np.mean(watershed_clusters),2),
-    " Median number of a cluster particles: ", round(np.median(watershed_clusters),2),
-    " Standard Deviation of cluster particles: ",round(np.std(watershed_clusters),2),
-    " Variance of cluster particles: ",round(np.var(watershed_clusters),2))
+    print("Mean number of a cluster particles : ", round(np.mean(watershed_clusters),2),
+    " Median number of a cluster particles : ", round(np.median(watershed_clusters),2),
+    "\nStandard Deviation of cluster particles : ",round(np.std(watershed_clusters),2),
+    " Variance of cluster particles : ",round(np.var(watershed_clusters),2))
 
     print("\n\n------------------------ Time Data ------------------")
-    print("Tottal run time : ")
-    print(totalTime)
-    print("Average run time : ")
-    print(totalTime / len(img_array))
-    print("\nShortest run time : ")
-    print(shortestTime)
-    print("Shortest run time picture : ")
-    print(shortestPicture)
-    print("\nLongest run time : ")
-    print(longestTime)
-    print("Longest run time picture : ")
-    print(longestPicture)
-
+    print("Tottal run time : ", totalTime, 
+    "\nAverage run time : ", totalTime / len(img_array), 
+    "\nShortest run time : ", shortestTime, 
+    "\nLongest run time : ", longestTime, 
+    "\nLongest run time picture : ", longestPicture)
     print("\n\n-----------------------------------------------------")
-
 
     fig, axs1 = plt.subplots(4, 1)
     fig, axs2 = plt.subplots(1, 2)
@@ -305,7 +283,7 @@ if __name__ == '__main__':
 
     axs4[0].boxplot(count_triangles)
     axs4[1].violinplot(count_triangles)
-    plt.show()
+    #plt.show()
 
     #-----------------   First idea of rod counting  --------------------
     # N, M = img_edge.shape

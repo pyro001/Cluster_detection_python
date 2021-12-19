@@ -1,11 +1,8 @@
 import random as ran
-
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-# Need
 def update_velocity_testfunction(p_best, g_best, pos):
     v = ([np.array([0, 0, 0]) for _ in range(particle_number)])
     nv = []
@@ -21,25 +18,15 @@ def update_velocity_testfunction(p_best, g_best, pos):
 
     return nv
 
-
-# need
 def update_position_testfunction(v, pos):
     new_pos = []
     for i in range(particle_number):
         new_pos.append(pos[i] + v[i])
     return new_pos
 
-
-# Define the function
-def functionGauss(peak, stddev, center, actual_x):
-    return peak * np.exp(-np.power(actual_x - stddev, 2) / (2 * np.power(center, 2)))
-
-
 def modelFunction(peak, stddev, center, x):
     return (peak) * np.power(stddev, 2) / (np.power(x - (center), 2) + np.power(stddev, 2))
 
-
-# Error function
 def calc_error(args):
     '''args is the parameter space arguments as a list. In this case a and b.'''
     # Initially there is no error
@@ -52,24 +39,18 @@ def calc_error(args):
     # Return the total error
     return e_2
 
-
-# Need
 def update_personal_best_testfunction(p_best, Par_Val, pos):
     for i in range(len(pos)):
         if (Par_Val[i] <= calc_error(p_best[i])):
             p_best[i] = pos[i]
     return p_best
 
-
-# need
 def update_global_best_testfunction(g_best, Par_Val, pos):
     for i in range(particle_number):
         if (Par_Val[i] <= calc_error(g_best)):
             g_best = pos[i]
     return g_best
 
-
-# Need
 def PSO_testfunction(n, ns, c1, c2, om, k, t, xmin, xmax):
     # Step 1a,
     # Initializing the Position
@@ -126,7 +107,6 @@ def PSO_testfunction(n, ns, c1, c2, om, k, t, xmin, xmax):
 
     return g_best, g_best_value, p_best
 
-
 if __name__ == '__main__':
     global data
     # SETUP######
@@ -151,7 +131,6 @@ if __name__ == '__main__':
     # ===================================================================================#
 
     fig = plt.figure(figsize=(12, 6))
-    # fig.suptitle('Supplied Experimental Data & Function', size=16, y=0.95)
 
     plt.scatter(*data.T, marker='o', c=np.random.rand(len(data)))
 
@@ -167,8 +146,6 @@ if __name__ == '__main__':
         print(mean)
     except IndexError:
         mean=mean
-
-
 
     Y = modelFunction(ymax, mean, mean, x)
 
@@ -195,28 +172,3 @@ if __name__ == '__main__':
     plt.ylabel('y')
     plt.title('optimized Data', pad=10)
     plt.show()
-    #################################################################################################
-    ######CROSS VERIFICATION WITH NELDER MEAD#####
-    # x = [1]
-    # Residual = minimize(calc_error, x, method='nelder-mead', options={'xatol': 1e-8, 'disp': True})
-    # print(Residual.x)
-    #
-    # fig = plt.figure(figsize=(12, 6))
-    # fig.suptitle('Supplied Experimental Data & Function', size=16, y=0.95)
-    # ax1 = fig.add_subplot()
-    # ax1.scatter(*data.T, marker='o', c=np.random.rand(len(data)))
-    #
-    # ax1.set_xlabel('x')
-    # ax1.set_ylabel('y')
-    # ax1.set_title('Data', pad=10)
-    #
-    # x = np.linspace(-3, 6, 30)
-    # Y = modelFunction(Residual.x[0], Residual.x[1], x)
-    #
-    # ax2 = fig.add_subplot()
-    # ax2.plot_surface(x, Y, alpha=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    # ax2.set_xlabel('x')
-    # ax2.set_ylabel('y')
-    # ax2.set_title('Function', pad=10)
-
-    # plt.show()
