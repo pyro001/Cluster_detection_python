@@ -12,18 +12,9 @@ import time
 
 
 if __name__ == '__main__':
-<<<<<<< Updated upstream
     img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
     #img_array= ['./pictures/big_lines_orginal.tif']
     #img_array = ['./pictures/big_triangles_orginal.png']
-=======
-    # img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/T001.png']
-    img_array = ['./pictures/big_circles_orginal.tif']
-    #img_array = ['./pictures/big_lines_orginal.tif']
-    # img_array = ['./pictures/testdata.tif']
-
-
->>>>>>> Stashed changes
     # Probably some better way of doing this but just for simplicty a variable or array will be made for each thing
     totalNumberOfClusters = 0  # Region labelling
     totalNumberOfParticles = 0  # particles in cluster: watershed
@@ -48,6 +39,7 @@ if __name__ == '__main__':
 
 
     printOutThings = False 
+    writeToFile = True
 
     for x in img_array:  ## loop through all the images images stored in a vector
         # Local variables
@@ -63,7 +55,9 @@ if __name__ == '__main__':
         numberOfCircles = 0
         numberOfClassifyingCircles = 0
         numberOfLine = 0
+        lineClusters = 0
         numberOfTriangles = 0
+        trianglesClusters = 0
         circleType = False
         rodType = False
         triangleType = False 
@@ -117,25 +111,22 @@ if __name__ == '__main__':
 
             # Principal component analasys 
             if circleType == True: 
-                #print("This is probably a circle!")
                 circles = openCv_HoughCircles(img_edge, 12, 6, 12)
-                if circles is not None:
-                    for j in circles[0, :]:
-                        numberOfCircles = numberOfCircles + 1
-                totalNumberOfCircles = numberOfCircles
+                numberOfCircles = 0
+                for j in circles[0, :]:
+                    numberOfCircles = numberOfCircles + 1
+                totalNumberOfCircles = totalNumberOfCircles + numberOfCircles
                 circlePicture = x
                 circleClusters = numberOfClusters
                 count_circles.append(numberOfCircles)
             elif triangleType == True:
-                #print("This is probably a Triangle!")
                 numberOfTriangles = numberOfTriangles + c
                 trianglePicture = x
                 trianglesClusters = numberOfClusters
-                count_triangles.append(numberOfTriangles)
+                count_triangles.append(c)
             elif rodType == True: 
                 linePicture = x
-                ##momentarily commented // this is annoyingly slow
-                # # Try to detect lines in the image
+                lineClusters = numberOfClusters
                 img_lines, numberOfLines = countRods(i)
                 rodArrayCount.append(numberOfLines)
                 try:
@@ -159,7 +150,6 @@ if __name__ == '__main__':
                 plt.xticks([])
                 plt.yticks([])
                 count += 1
-<<<<<<< Updated upstream
             
         if printOutThings == True:
             x = watershed_clusters
@@ -206,134 +196,27 @@ if __name__ == '__main__':
             # plt.scatter(xdata,))
             plt.show()
 
+            if (writeToFile):
+                name = x.replace(".", "")
+                name = name.replace("png", "")
+                name = name.replace("tif", "")
+                print("Data Storred in ", "." + name + ".txt", "a")
+                f = open("." + name + ".txt", "a")
+                for i in range(len(n)):
+                    if (n[i] > 0):
+                        f.write(str(n[i]) + "," + str(bins[i]) + "\n")
+                f.close()
 
-            elapse = time.time() - t
-            if elapse <= shortestTime:
-                shortestTime = elapse
-                shortestPicture = x
-
-            if elapse >= longestTime:
-                longestTime = elapse
-                longestPicture = x
-
-            totalTime = totalTime + elapse
-
-            print("-----------------------------------------------------\n\n")
-            print("Currenct picture : ")
-            print(x)
-            print("Number of Clusters : ")
-            print(numberOfClusters)
-            print("Particles vs Circles ratio : ")
-            print(numberOfCircles/np.sum(watershed_clusters))
-            print("Number of Circles in clusters with Hough Line detect : ")
-            print(numberOfCircles)
-            print("Number of particles in clusters with watersheading : ")
-            print(np.sum(watershed_clusters))
-            print("Number of Lines in clusters : ")
-            print(numberOfLine)
-            print("Number of Triangles in clusters : ")
-            print(numberOfTriangles)
-
-            print("Run time : ")
-            print(elapse)
-
-            print("Mean size of a cluster: ", round(np.mean(watershed_clusters),2),
-            " Median size of a cluster: ", round(np.median(watershed_clusters),2), 
-            " Standard deviation of cluster size: ",round(np.std(watershed_clusters),2),
-            " Variance of cluster size: ",round(np.var(watershed_clusters),2))
-            print("\n\n-----------------------------------------------------")
-            #plt.show()
-=======
-
-        plt.show()
-        #plot rods count histogram
-        n, bins, patches = plt.hist(rodArrayCount,20, facecolor='blue', alpha=0.5)
-        # print("n", n,"bins", bins, "patches", patches)
-        plt.xlabel('Bins')
-        plt.ylabel('Frequency')
-        plt.title('Rods Nr particles')
-        plt.show()
-        #plot area per rod using lines
-        n, bins, patches = plt.hist(ForegBackgRod,bins=40,  facecolor='red', alpha=0.5)
-        # print("n", n, "bins", bins, "patches", patches)
-        plt.xlabel('Bins')
-        plt.ylabel('Frequency')
-        plt.title('Area per perticle lines')
-        plt.show()
-        ##the output looks wierd just take a look
-        plt.show()
-        n, bins, patches = plt.hist(watershed_clusters,20, facecolor='blue', alpha=0.5)
-        # print("n", n,"bins", bins, "patches", patches)/
-        plt.xlabel('Bins')
-        plt.ylabel('Frequency')
-        plt.title('Nr particles watershed')
-        plt.show()
-        # num_bins = int(np.ceil(max(y) / 20))
-        n, bins, patches = plt.hist(ForegBackg,10,  facecolor='red', alpha=0.5)
-        # print("n", n, "bins", bins, "patches", patches)
-        plt.xlabel('Bins')
-        plt.ylabel('Frequency')
-        plt.title('Area per perticle watershed')
-        plt.show()
-        xdata = np.linspace(0,450, len(n))
-        fittingFunction, cov = scipy.stats.distributions.norm.fit(ForegBackg)
-        fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
-        plt.plot(xdata, fitted_data, 'r-')
-        #curve_fit(f=gaussian, xdata=x, ydata=n)
-        # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
-        plt.show()
-    #plt.scatter(watershed_clusters, n)
-        # plt.scatter(xdata,))
-        plt.show()
+            xdata = np.linspace(0, 450, 40)
+            fittingFunction, cov = scipy.stats.distributions.norm.fit(ForegBackg)
+            fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
+            plt.plot(xdata, fitted_data, 'r-')
 
 
         elapse = time.time() - t
         if elapse <= shortestTime:
             shortestTime = elapse
             shortestPicture = x
-        # Just gathering some data and stuff, not sure how much is relavant or wanted
-
-        plt.show()
-        # plot rods count histogram
-        n, bins, patches = plt.hist(rodArrayCount, 20, facecolor='blue', alpha=0.5)
-        # print("n", n, "bins", bins, "patches", patches)
-        plt.xlabel('Bins')
-        plt.ylabel('Frequency')
-        plt.title('Rods')
-        plt.show()
-        ##the output looks wierd just take a look
-        plt.show()
-        n, bins, patches = plt.hist(watershed_clusters, 2 * max(watershed_clusters), facecolor='blue', alpha=0.5)
-        # print("n", n, "bins", bins, "patches", patches)
-        plt.xlabel('Bins')
-        plt.ylabel('Frequency')
-        plt.show()
-        # num_bins = int(np.ceil(max(y) / 20))
-        n, bins, patches = plt.hist(ForegBackg, facecolor='red', alpha=0.5)
-        # print("n", n, "bins", bins, "patches", patches)
-        plt.xlabel('Bins')
-        plt.ylabel('Frequency')
-        plt.show()
-
-        if (Write_to_file):
-            name = x.replace(".", "")
-            name = name.replace("png", "")
-            name = name.replace("tif", "")
-            print("Data Storred in ", "." + name + ".txt", "a")
-            f = open("." + name + ".txt", "a")
-            for i in range(len(n)):
-                if (n[i] > 0):
-                    f.write(str(n[i]) + "," + str(bins[i]) + "\n")
-            f.close()
-
-        xdata = np.linspace(0, 450, 40)
-        fittingFunction, cov = scipy.stats.distributions.norm.fit(ForegBackg)
-        fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
-        plt.plot(xdata, fitted_data, 'r-')
-
-        # curve_fit(f=gaussian, xdata=x, ydata=n)
-        # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
-        plt.show()
 
         if elapse >= longestTime:
             longestTime = elapse
@@ -341,71 +224,46 @@ if __name__ == '__main__':
 
         totalTime = totalTime + elapse
 
-        print("-----------------------------------------------------\n\n")
-        print("Currenct picture : ")
-        print(x)
-        print("Number of Clusters : ")
-        print(numberOfClusters)
-        print("Particles vs Circles ratio : ")
-        print(numberOfCircles/np.sum(watershed_clusters))
-        print("Number of Circles in clusters with Hough Line detect : ")
-        print(numberOfCircles)
-        print("Number of particles in clusters with watersheading : ")
-        print(np.sum(watershed_clusters))
-        print("Number of Lines in clusters : ")
-        print(numberOfLine)
-        print("Number of Triangles in clusters : ")
-        print(numberOfTriangles)
-
-        print("Run time : ")
-        print(elapse)
-
-        print("Mean size of a cluster: ", round(np.mean(watershed_clusters),2),
-        " Median size of a cluster: ", round(np.median(watershed_clusters),2),
-        " Standard deviation of cluster size: ",round(np.std(watershed_clusters),2),
-        " Variance of cluster size: ",round(np.var(watershed_clusters),2))
-        print("\n\n-----------------------------------------------------")
-        #plt.show()
->>>>>>> Stashed changes
-
-    print("------------------------ Data Stuff ------------------\n\n")
+    print("------------------------ Text Printout ------------------\n\n")
     print("Total number of Clusters : ")
     print(totalNumberOfClusters)
     
-    print("\n\nPicture with most ammount of Circles : ")
-    print(circlePicture)
-    print("Number of Clusters in picture")
-    print(circleClusters)
-    print("Number of Circles in picture : ")
-    print(totalNumberOfCircles)
-    print("Average number of circles in clusters : ")    
-    if circleClusters != 0:          
+    if circleClusters != 0: 
+        print("\n\nPicture with most ammount of Circles : ")
+        print(circlePicture)
+        print("Number of Clusters in picture")
+        print(circleClusters)
+        print("Number of Circles in picture : ")
+        print(totalNumberOfCircles)
+        print("Average number of circles in clusters : ")             
         print(totalNumberOfCircles / circleClusters)
-    
-    print("\n\nPicture with most ammout of lines")
-    print(linePicture)
-    print("Number of Clusters in picture")
-    # print(lineClusters) ## not defined
-    print("Number of Lines in picture : ")
-    # print(numberOfLine)
-    print("Average number of lines in clusters : ")
-    # print(numberOfLine / lineClusters)
 
-    print("\n\nPicture with most ammount of Triangles : ")
-    print(trianglePicture)
-    print("Numver of Clusters in picture")
-    # print(trianglesClusters)
-    print("Number of Triangles in clusters : ")
-    # print(numberOfTriangles)
-    print("Average number of Triangles in clusters : ")            
-    # print(numberOfTriangles / trianglesClusters)
+    if lineClusters != 0:   
+        print("\n\nPicture with most ammout of lines")
+        print(linePicture)
+        print("Number of Clusters in picture")
+        print(lineClusters) ## not defined
+        print("Number of Lines in picture : ")
+        print(numberOfLine)
+        print("Average number of lines in clusters : ")
+        print(numberOfLine / lineClusters)
+
+    if trianglesClusters != 0: 
+        print("\n\nPicture with most ammount of Triangles : ")
+        print(trianglePicture)
+        print("Numver of Clusters in picture")
+        print(trianglesClusters)
+        print("Number of Triangles in clusters : ")
+        print(numberOfTriangles)
+        print("Average number of Triangles in clusters : ")           
+        print(numberOfTriangles / trianglesClusters)
 
     print("Mean number of a cluster particles: ", round(np.mean(watershed_clusters),2),
     " Median number of a cluster particles: ", round(np.median(watershed_clusters),2),
     " Standard Deviation of cluster particles: ",round(np.std(watershed_clusters),2),
     " Variance of cluster particles: ",round(np.var(watershed_clusters),2))
 
-    print("\n\n------------------------ Time Stuff ------------------")
+    print("\n\n------------------------ Time Data ------------------")
     print("Tottal run time : ")
     print(totalTime)
     print("Average run time : ")
