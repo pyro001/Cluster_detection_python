@@ -1,4 +1,4 @@
-from OIP21_group3 import *
+from lib.OIP21_group3 import *
 
 if __name__ == '__main__':
     img_array = ['./pictures/001_002.tif', './pictures/R001_001.tif', './pictures/T001.png']
