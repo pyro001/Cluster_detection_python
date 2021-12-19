@@ -44,28 +44,120 @@ UPDATE_4, 2018-10-10:
 # IMPORTS: 
 # ------------------------------------
 
+import math
+# tkinter interface module for GUI dialogues (so far only for file opening):
+import tkinter as tk
+from copy import deepcopy
+from tkinter.filedialog import askopenfilename
+
 # needed almost every time:
 import cv2
 import imutils
-import matplotlib.pyplot as plt  # for plotting
 import matplotlib.image as mpimg  # for image handling and plotting
+import matplotlib.pyplot as plt  # for plotting
 import numpy as np  # for all kinds of (accelerated) matrix / numerical operations
 from scipy import ndimage
 from scipy.signal import convolve2d
-from copy import copy, deepcopy
-
-# tkinter interface module for GUI dialogues (so far only for file opening):
-import tkinter as tk
-from tkinter.filedialog import askopenfilename
-
 # ------------------------------------
-# LOADING, SEPARATING AND CONVERTING TO INTENSITY: 
+# LOADING, SEPARATING AND CONVERTING TO INTENSITY:
 # ------------------------------------
 from skimage.feature import peak_local_max
 from skimage.segmentation import watershed
 
+
 # ----------------------------------------------------------
 # Modified stuff 
+
+def power_law(x, a, b):
+    return a * np.power(x, b)
+
+def gaussian(x, a, b, c):
+    return a*np.exp(-np.power(x - b, 2)/(2*np.power(c, 2)))
+
+def skeletonize(img):
+    """ OpenCV function to return a skeletonized version of img, a Mat object"""
+
+    #  hat tip to http://felix.abecassis.me/2011/09/opencv-morphological-skeleton/
+
+    img = img.copy()  # don't clobber original
+    skel = img.copy()
+
+    skel[:, :] = 0
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (2, 2))
+    x = cv2.countNonZero(img)
+    count = 1
+    while True:
+        eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, kernel)
+        temp = cv2.morphologyEx(eroded, cv2.MORPH_DILATE, kernel)
+        temp = cv2.subtract(img, temp)
+        skel = cv2.bitwise_or(skel, temp)
+        img[:, :] = eroded[:, :]
+        count += 1
+        if cv2.countNonZero(img) <= 0 or count >= 10:
+            break
+
+    return skel
+
+
+def countRods(i):
+    img = i.copy()
+    # scale the image so i have more pixels to play with
+    scale_percent = 200  # percent of original size
+    width = img.shape[1] * 2
+    height = img.shape[0] * 2
+    dim = (width, height)
+    img = cv2.resize(img, dim)
+
+    # l,w = np.shape(img)
+    # img = cv2.resize(img, (w*2, l*2))
+
+    # blur to make mask to remove everything outside the cluster
+    img_blur = cv2.blur(img, (5, 5))
+    ret, mask = cv2.threshold(img_blur, 20, 255, cv2.THRESH_BINARY)
+    img_noise = cv2.bitwise_and(img, img, mask=mask)
+
+    # apply mexican hat
+    kernel = np.array([[-1, -1, -1], [-1, 10, -1], [-1, -1, -1]])
+    img_hat1 = cv2.filter2D(img_noise, -1, kernel)
+    img_hat2 = cv2.filter2D(img_hat1, -1, kernel)
+  
+    # theshold
+    thresh = auto_thresh(img_hat2)
+
+    #distance transform
+    D = ndimage.distance_transform_edt(thresh)
+    localMax = peak_local_max(D, indices=False, min_distance=3,labels=thresh)
+    localMax = np.multiply(localMax,255).astype('uint8')
+    kernel = np.ones((3,3), np.uint8)
+    #dilate for easier line finding
+    localMax = cv2.dilate(localMax, kernel, iterations=1)
+    #find lines and draw on top until no more lines is found
+    drawLines = []
+    lines = cv2.HoughLines(localMax,1,(1*np.pi)/180,8)
+    while lines is not None :
+        drawLines.append([lines[0][0][0],lines[0][0][1]])
+        a = math.cos(lines[0][0][1])
+        b = math.sin(lines[0][0][1])
+        x0 = a * lines[0][0][0]
+        y0 = b * lines[0][0][0]
+        pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
+        pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+        cv2.line(localMax, pt1, pt2, (0,0,0), 3)
+        lines = cv2.HoughLines(localMax,1,(1*np.pi)/180,8)
+    #draw the lines on image
+    img_lines = img.copy()
+    for i in drawLines:
+        a = math.cos(i[1])
+        b = math.sin(i[1])
+        x0 = a * i[0]
+        y0 = b * i[0]
+        pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
+        pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+        cv2.line(img_lines, pt1, pt2, (100,0,0), 1)
+
+    return img_lines, len(drawLines)
+
+
 def FloodFillLabeling_modified(imgBIN):
     label = 2
     # collect the non-zero / foreground elements:
@@ -121,9 +213,10 @@ def FloodFill_BF_modified(IMG, u, v, label):
                 S.append([x - 1, y])
     return IMG, [xmax, xmin, ymax, ymin]
 
+
 def pre_region_labeling_filtering(img):
     # The Triangle and Circle image have some stuff at the bottom we need to cut of,
-    #img_orginal = img[0:870, :]  ## cut off the bottom manual at this moment
+    # img_orginal = img[0:870, :]  ## cut off the bottom manual at this moment
 
     # prepare for region labeling
     img_b = cv2.medianBlur(img, 7)
@@ -138,6 +231,7 @@ def pre_region_labeling_filtering(img):
 
     return threshDilBin
 
+
 def segmenting(img, zones):
     array = []
     height, width = np.shape(img)
@@ -148,33 +242,122 @@ def segmenting(img, zones):
         x2 = i[2]
         x1 = i[3]
         if (x1 > 0 and y1 > 0 and x2 < width - 1 and y2 < height - 1):
-            array.append(img[y1:y2, x1:x2])## the clusters are now in a vector
+            array.append(img[y1:y2, x1:x2])  ## the clusters are now in a vector
     return array
 
+
 def pre_conditioning(img):
-    padw=3
-    i=np.pad(img, ((padw, padw), (padw, padw)), 'constant')
+    padw = 3
+    i = np.pad(img, ((padw, padw), (padw, padw)), 'constant')
 
     img_contrast = auto_contrast256(i)  # This does not matter that much for the circles but improves the lines
     img_thresholded = auto_thresh(img_contrast)  # Auto thresholding would prob be better.
     img_edges, Phi, IDx, IDy = detect_edges(img_thresholded, Filter='Prewitt')
     return img_edges, img_thresholded
 
+
 def openCv_HoughCircles(img, tolerance, minRadius, maxRadius):
     circles = cv2.HoughCircles(img,
-    # HoughCircles only works with unit8 so just typecasting it for simplicity
-    # image
-    cv2.HOUGH_GRADIENT,  # Method   /bTODO ::: look at this
-    1,  # dp inverse resolution (1 = max)/bTODO ::: look at this
-    8,  # minDist, approximation of the max radius which makes sense
-    param1=50,  # Threshold
-    param2=tolerance, # #:: 12 best tolerance of the algorithm how many points on the circle the
-    # algo needs to make an image The lower this is the more false positives and
-    # the higher it is it does not detect at all
-    minRadius=minRadius,  # Minimum Radius :: generated Circle radius control
-    maxRadius=maxRadius  # Maximum Radius
-    )
+                               # HoughCircles only works with unit8 so just typecasting it for simplicity
+                               # image
+                               cv2.HOUGH_GRADIENT,  # Method   /bTODO ::: look at this
+                               1,  # dp inverse resolution (1 = max)/bTODO ::: look at this
+                               8,  # minDist, approximation of the max radius which makes sense
+                               param1=50,  # Threshold
+                               param2=tolerance,
+                               # #:: 12 best tolerance of the algorithm how many points on the circle the
+                               # algo needs to make an image The lower this is the more false positives and
+                               # the higher it is it does not detect at all
+                               minRadius=minRadius,  # Minimum Radius :: generated Circle radius control
+                               maxRadius=maxRadius  # Maximum Radius
+                               )
     return circles
+
+
+def find_particle(img, x,y,r, percentage=0.1): #set to 10% by default
+    np.ceil(r)
+    img_temp = img[int(y - r):int(y + r), int(x - r):int(x + r)]
+    whitePixles = cv2.countNonZero(img_temp)
+    if whitePixles >= (r * r * 4) * percentage:  # Calculate the area of a circle and then multiplies it by the % and then checks if it is bigger then the white in the area
+        return True  # if the smallest white is bigger then area*% append it
+    else:
+        # print("thing ignored, size ", whitePixles)
+        return False
+
+
+def locwatershed(img_org, thresh2, modifier=1.9):
+    zoom = False
+    redux = False
+    img = img_org.copy()
+    l, b = np.shape(thresh2)
+    if l < 50 and b < 50:
+        zoom = True
+        # print("zoom activated", l,b)
+        img = cv2.resize(img, (0, 0), fx=1.2, fy=1.2)
+        thresh2 = cv2.resize(thresh2, (0, 0), fx=4, fy=4)
+    kernel = np.array(Mex5, np.uint8)  # np.ones((3, 3), np.uint8)
+    temp = min_filter(thresh2, 3)
+    # thresh2= auto_thresh(thresh2)
+    temp = cv2.dilate(cv2.erode(temp, kernel, iterations=1), kernel, iterations=1)
+
+    if cv2.countNonZero(temp) > 0.4 * cv2.countNonZero(thresh2) and not zoom:
+        thresh2 = temp
+        redux=True
+        print(cv2.countNonZero(temp), 0.6 * cv2.countNonZero(thresh2))
+    else:
+        kernel =  np.ones((3, 3), np.uint8)
+        thresh2=cv2.erode(thresh2, kernel, iterations=1)
+    minareacircles = []
+    avgr = []
+
+    D = ndimage.distance_transform_edt(thresh2)
+    localMax = peak_local_max(D, indices=False, min_distance=5,
+                              labels=thresh2)
+    # perform a connected component analysis on the local peaks,
+    # using 8-connectivity, then apply the Watershed algorithm
+    markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
+    labels = watershed(-D, markers, mask=thresh2)
+
+    # print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
+    for label in np.unique(labels):
+        # if the label is zero, we are examining the 'background'
+        # so simply ignore it
+        if label == 0:
+            continue
+        # otherwise, allocate memory for the label region and draw
+        # it on the mask
+        mask = np.zeros(thresh2.shape, dtype="uint8")
+        mask[labels == label] = 255
+        # detect contours in the mask and grab the largest one
+        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+                                cv2.CHAIN_APPROX_SIMPLE)
+        cnts = imutils.grab_contours(cnts)
+        c = max(cnts, key=cv2.contourArea)
+        # draw a circle enclosing the object
+        ((x, y), r) = cv2.minEnclosingCircle(c)
+        if(find_particle(thresh2,x,y,r,0.3)):
+            minareacircles.append([x, y, r])
+            avgr.append(r)
+    try:
+        # print(avgr)
+        # print(np.mean(avgr)-2*np.std(avgr), "\n\n\n")
+        # Removed = [i for i in minareacircles if i[2] < np.mean(avgr)-modifier*np.std(avgr)]
+        # print("::: REmoved DAta:::", len(Removed))
+        minareacircles = [i for i in minareacircles if i[2] >= np.mean(avgr)-modifier*np.std(avgr)]
+
+        for l in minareacircles:
+            x, y, z = l
+            cv2.circle(img, (int(x), int(y)), int(r), (0, 255, 0), 1)
+    except Exception as E:
+        print("Error: ", E, len(np.unique(labels)))
+    # cv2.putText(image, "#{}".format(label), (int(x) - 10, int(y)),
+    # cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    # show the output image
+    # print("Comaprison::",len(minareacircles),len(np.unique(labels))-1)
+    if redux:
+        print(minareacircles,cv2.countNonZero(temp) ,cv2.countNonZero(thresh2))
+    return thresh2, img, len((minareacircles))
+
 
 # -------------------------------------------------------------
 
@@ -1462,60 +1645,3 @@ def plot_image_sequence(sequence, title='Intensity Image', cmap='gray', vmax=255
         ax.set_title('threshold level: %3i' % (i))
         plt.pause(0.01)
     return fig, ax
-
-
-def unpad(dens, pad):
-    """
-    Input:  dens   -- np.ndarray(shape=(nx,ny,nz))
-            pad    -- np.array(px,py,pz)
-
-    Output: pdens -- np.ndarray(shape=(nx-px,ny-py,nz-pz))
-    """
-
-    nx, ny = dens.shape
-    pdens= dens[2:nx-pad,2:ny-pad]
-    # pl[2]:nz-pr[2]]
-
-    return pdens
-
-
-def locwatershed(img, thresh2, padw=4):
-    # kernel = np.ones((3, 3), np.uint8)
-    # thresh2 = np.pad(thresh2, ((padw, padw), (padw, padw)), 'constant')
-
-    # Using cv2.erode() method
-    # thresh2 = cv2.erode(thresh2, kernel, iterations=1)
-
-    # print(img.shape)
-    D = ndimage.distance_transform_edt(thresh2)
-    localMax = peak_local_max(D, indices=False, min_distance=5,
-                              labels=thresh2)
-    # cv2.imshow("Distance MAp", D)
-
-    # perform a connected component analysis on the local peaks,
-    # using 8-connectivity, then appy the Watershed algorithm
-    markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
-    labels = watershed(-D, markers, mask=thresh2)
-
-    #print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
-    for label in np.unique(labels):
-        # if the label is zero, we are examining the 'background'
-        # so simply ignore it
-        if label == 0:
-            continue
-        # otherwise, allocate memory for the label region and draw
-        # it on the mask
-        mask = np.zeros(thresh2.shape, dtype="uint8")
-        mask[labels == label] = 255
-        # detect contours in the mask and grab the largest one
-        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-                                cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        c = max(cnts, key=cv2.contourArea)
-        # draw a circle enclosing the object
-        ((x, y), r) = cv2.minEnclosingCircle(c)
-        cv2.circle(img, (int(x), int(y)), int(r), (0, 255, 0), 1)
-    # cv2.putText(image, "#{}".format(label), (int(x) - 10, int(y)),
-    # cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-    # show the output image
-    return (img, len(np.unique(labels)) - 1)

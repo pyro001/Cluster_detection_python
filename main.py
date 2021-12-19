@@ -1,11 +1,11 @@
 from OIP21_group3 import *
 
 if __name__ == '__main__':
-    img_array = ['./pictures/big_circles_orginal.tif', './pictures/big_lines_orginal.tif', './pictures/big_triangles_orginal.png']
+    img_array = ['./pictures/001_002.tif', './pictures/R001_001.tif', './pictures/T001.png']
 
-    totalNumberOfClusters = 0  # Region labelling
-    totalNumberOfParticles = 0  # particles in cluster: watershed
-    totalNumberOfCircles = 0  # from hough transform
+    totalNumberOfClusters = 0  
+    totalNumberOfParticles = 0 
+    totalNumberOfCircles = 0  
     lineClusterCount = 0
 
     totalTime = 0
@@ -26,19 +26,17 @@ if __name__ == '__main__':
     count_triangles = []
 
 
-    printOutThings = False
+    printOutThings = False  
     writeToFile = False
 
-    for x in img_array:  ## loop through all the images images stored in a vector
-        # Local variables
+    for x in img_array:  # loop through all the images images stored in a vector
         t = time.time()
-        clusterArray = []  # This should maybe be global?
-        circleArray = []  # This should also maybe be global?
+        clusterArray = [] 
+        circleArray = []  
         watershed_clusters=[]
         watershed_clustersC=[]
         ForegBackg=[]
-        ForegBackgRod=[]
-        rodArrayCount = [] 
+        ForegBackgRod=[] 
         numberOfClusters = 0
         numberOfCircles = 0
         totalNumberOfLines = 0
@@ -116,7 +114,7 @@ if __name__ == '__main__':
                 lineClusterCount = numberOfClusters
                 img_lines, numberOfLines = countRods(i)
                 totalNumberOfLines = totalNumberOfLines + numberOfLines
-                rodArrayCount.append(numberOfLines)
+                count_rods.append(numberOfLines)
                 try:
                     ForegBackgRod.append(cv2.countNonZero(img_thresh)/(numberOfLines) )
                 except ZeroDivisionError:
@@ -144,7 +142,7 @@ if __name__ == '__main__':
             y=ForegBackg ##normalize the data?
             plt.show()
             #plot rods count histogram
-            n, bins, patches = plt.hist(rodArrayCount,20, facecolor='blue', alpha=0.5)
+            n, bins, patches = plt.hist(count_rods,20, facecolor='blue', alpha=0.5)
             print("n", n,"bins", bins, "patches", patches)
             plt.xlabel('Bins')
             plt.ylabel('Frequency')
@@ -294,10 +292,6 @@ if __name__ == '__main__':
     count_rods = np.array(count_rods)
     count_triangles = np.array(count_triangles)
 
-    print(count_triangles)
-    print(count_rods)
-
-    print("FOREGROUND PIXELS")
     axs1[0].hist(count_foreground_pixels, numberOfClusters, color=["red", "green", "blue"])
     axs1[1].hist(count_foreground_pixels[0], len(count_foreground_pixels[0]), color="red")
     axs1[2].hist(count_foreground_pixels[1], len(count_foreground_pixels[1]), color="green")
@@ -311,59 +305,30 @@ if __name__ == '__main__':
 
     axs4[0].boxplot(count_triangles)
     axs4[1].violinplot(count_triangles)
-
-
-
-    # print("CIRCLES")
-    # axs2[0].hist(count_circles, count_circles.size, color=["red", "green", "blue"])
-    # axs2[1].hist(count_circles[0], len(count_circles[0]), color="red")
-    # axs2[2].hist(count_circles[1], len(count_circles[1]), color="green")
-    # axs2[3].hist(count_circles[2], len(count_circles[2]), color="blue")
-    
-
-    # print("RODS")
-    # axs3[0].hist(count_rods, count_rods.size, color=["red", "green", "blue"])
-    # axs3[1].hist(count_rods[0], len(count_rods[0]), color="red")
-    # axs3[2].hist(count_rods[1], len(count_rods[1]), color="green")
-    # axs3[3].hist(count_rods[2], len(count_rods[2]), color="blue")
-    
-
-    # print("TRIANGLES")
-    # axs4[0].hist(count_triangles, count_triangles.size, color=["red", "green", "blue"])
-    # axs4[1].hist(count_triangles[0], len(count_triangles[0]), color="red")
-    # axs4[2].hist(count_triangles[1], len(count_triangles[1]), color="green")
-    # axs4[3].hist(count_triangles[2], len(count_triangles[2]), color="blue")
     plt.show()
 
+    #-----------------   First idea of rod counting  --------------------
+    # N, M = img_edge.shape
+    # if numberOfCircles < 3: 
 
+    #     Nth = (np.floor_divide(M,2)).astype(np.uint8) # number of THETA values in the accumulator array
+    #     Nr = (np.floor_divide(N,2)).astype(np.uint8)  # number of R values in the accumulator array
+    #     K = 30
 
+    #     Acc, MaxIDX, MaxTH, MaxR = hough_lines(img_edge, Nth, Nr, K)
+    #     #MaxTH, MaxR = filter_lines(MaxTH, MaxR, 1, 10)
 
-                #-------------------------------------
-            # N, M = img_edge.shape
-            # if numberOfCircles < 3: 
+    #     if K > len(MaxTH): K = len(MaxTH)
 
-            #     Nth = (np.floor_divide(M,2)).astype(np.uint8) # number of THETA values in the accumulator array
-            #     Nr = (np.floor_divide(N,2)).astype(np.uint8)  # number of R values in the accumulator array
-            #     K = 30
+    #     avg_angles = []
+    #     for line in range(K):
+    #         #oip.plot_line_rth(E, MaxTH[i], MaxR[i], ax)
+    #         #plot_line_rth(M, N, MaxR[line], MaxTH[line], output_axs[count-1])
 
+    #         avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
 
-            #     Acc, MaxIDX, MaxTH, MaxR = hough_lines(img_edge, Nth, Nr, K)
-
-
-
-            #     #MaxTH, MaxR = filter_lines(MaxTH, MaxR, 1, 10)
-
-            #     if K > len(MaxTH): K = len(MaxTH)
-
-            #     avg_angles = []
-            #     for line in range(K):
-            #         #oip.plot_line_rth(E, MaxTH[i], MaxR[i], ax)
-            #         #plot_line_rth(M, N, MaxR[line], MaxTH[line], output_axs[count-1])
-
-            #         avg_angles.append(np.average(np.abs(MaxTH - MaxTH[line])))
-
-            #     avg_angle = np.average(avg_angles)
-            #     #avg_angle = np.sum(avg_angles)/K
-            #     print("AVERAGE ANGLE")
-            #     print(avg_angle)
-            # --------------------------------
+    #     avg_angle = np.average(avg_angles)
+    #     #avg_angle = np.sum(avg_angles)/K
+    #     print("AVERAGE ANGLE")
+    #     print(avg_angle)
+    # --------------------------------

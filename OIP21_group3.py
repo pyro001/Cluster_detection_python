@@ -24,7 +24,6 @@ from skimage.segmentation import watershed
 
 import time
 
-
 def power_law(x, a, b):
     return a * np.power(x, b)
 
@@ -37,10 +36,7 @@ def auto_thresh(img, mode="Thresholding"):
     for thresh in range(len(hst)):
         if thresh > 1:
             variance_list.append(mean_class_variance(hst, thresh))
-    # print(variance_list)
-    # print("MAX tuple: ", max(variance_list))
     var, thresh = max(variance_list)
-    # print("MAX tuple: ", thresh)
     if mode == "Thresholding":
         return threshold(img, thresh)
     elif mode == "UpperSave":
@@ -103,7 +99,6 @@ def skeletonize(img):
 
     return skel
 
-
 def countRods(i):
     img = i.copy()
     # scale the image so i have more pixels to play with
@@ -160,7 +155,6 @@ def countRods(i):
 
     return img_lines, len(drawLines)
 
-
 def FloodFillLabeling_modified(imgBIN):
     label = 2
     # collect the non-zero / foreground elements:
@@ -178,7 +172,6 @@ def FloodFillLabeling_modified(imgBIN):
             zones.append(zone)
             label = label + 1
     return IMG, zones
-
 
 # insert image, (u,v) (start pixel), label nr
 def FloodFill_BF_modified(IMG, u, v, label):
@@ -216,7 +209,6 @@ def FloodFill_BF_modified(IMG, u, v, label):
                 S.append([x - 1, y])
     return IMG, [xmax, xmin, ymax, ymin]
 
-
 def pre_region_labeling_filtering(img):
     # The Triangle and Circle image have some stuff at the bottom we need to cut of,
     # img_orginal = img[0:870, :]  ## cut off the bottom manual at this moment
@@ -234,7 +226,6 @@ def pre_region_labeling_filtering(img):
 
     return threshDilBin
 
-
 def segmenting(img, zones):
     array = []
     height, width = np.shape(img)
@@ -247,7 +238,6 @@ def segmenting(img, zones):
         if (x1 > 0 and y1 > 0 and x2 < width - 1 and y2 < height - 1):
             array.append(img[y1:y2, x1:x2])  ## the clusters are now in a vector
     return array
-
 
 def pre_conditioning(img):
     padw = 3
@@ -275,7 +265,6 @@ def openCv_HoughCircles(img, tolerance, minRadius, maxRadius):
                                )
     return circles
 
-
 def find_particle(img, x,y,r, percentage=0.1): #set to 10% by default
     np.ceil(r)
     img_temp = img[int(y - r):int(y + r), int(x - r):int(x + r)]
@@ -301,7 +290,7 @@ def locwatershed(img_org, thresh2, modifier=1.9):
     if cv2.countNonZero(temp) > 0.4 * cv2.countNonZero(thresh2) and not zoom:
         thresh2 = temp
         redux=True
-        print(cv2.countNonZero(temp), 0.6 * cv2.countNonZero(thresh2))
+        #print(cv2.countNonZero(temp), 0.6 * cv2.countNonZero(thresh2))
     else:
         kernel =  np.ones((3, 3), np.uint8)
         thresh2=cv2.erode(thresh2, kernel, iterations=1)
@@ -347,12 +336,8 @@ def locwatershed(img_org, thresh2, modifier=1.9):
         print(minareacircles,cv2.countNonZero(temp) ,cv2.countNonZero(thresh2))
     return thresh2, img, len((minareacircles))
 
-
-
 # -----------------------------------------------------------------------------------------
-# Functions from class library
-
-
+# Functions from OIP21_lib_ImageProcessing_V6.py librarry 
 
 # 5x5 Mexican Hat Filter:
 Mex5 = np.array([[0, 0, -1, 0, 0],
@@ -360,6 +345,29 @@ Mex5 = np.array([[0, 0, -1, 0, 0],
                  [-1, -2, 16, -2, -1],
                  [0, -1, -2, -1, 0],
                  [0, 0, -1, 0, 0]])
+
+# Edge Detection Filters: 
+# Derivative:
+HDx = np.array([[-0.5, 0., 0.5]])
+HDy = np.transpose(HDx)
+
+# Prewitt:
+HPx = np.array([[-1., 0., 1.],
+                [-1., 0., 1.],
+                [-1., 0., 1.]]) / 6.
+HPy = np.transpose(HPx)
+
+# Sobel:
+HSx = np.array([[-1., 0., 1.],
+                [-2., 0., 2.],
+                [-1., 0., 1.]]) / 8.
+HSy = np.transpose(HPx)
+
+# Improved Sobel:
+HISx = np.array([[-3., 0., 3.],
+                 [-10., 0., 10.],
+                 [-3., 0., 3.]]) / 32.
+HISy = np.transpose(HPx)
 
 def min_filter(imgINT, radius):
     '''filter with the minimum (non-linear) filter of given radius'''
@@ -382,37 +390,12 @@ def filter_image_float(I, H):
     # Convolution-based filtering: 
     return conv2(np.double(I), np.double(H))
 
-
 def auto_contrast256(img):
     alow = np.min(img)
     ahigh = np.max(img)
     amin = 0.
     amax = 255.
     return (amin + (img.astype(np.float) - alow) * (amax - amin) / (ahigh - alow)).astype(np.uint8)
-
-# Edge Detection Filters: 
-
-# Derivative:
-HDx = np.array([[-0.5, 0., 0.5]])
-HDy = np.transpose(HDx)
-
-# Prewitt:
-HPx = np.array([[-1., 0., 1.],
-                [-1., 0., 1.],
-                [-1., 0., 1.]]) / 6.
-HPy = np.transpose(HPx)
-
-# Sobel:
-HSx = np.array([[-1., 0., 1.],
-                [-2., 0., 2.],
-                [-1., 0., 1.]]) / 8.
-HSy = np.transpose(HPx)
-
-# Improved Sobel:
-HISx = np.array([[-3., 0., 3.],
-                 [-10., 0., 10.],
-                 [-3., 0., 3.]]) / 32.
-HISy = np.transpose(HPx)
 
 def detect_edges(imgINT, Filter='Sobel'):
     Hx, Hy = {
@@ -436,7 +419,6 @@ def hist256(imgint8):
     for cnt in range(255):
         hist[cnt] = np.sum(imgint8 == cnt)
     return (hist)
-
 
 def threshold(imgINT, ath):
     imgTH = np.zeros(imgINT.shape)
