@@ -29,9 +29,9 @@ if __name__ == '__main__':
 
 
     printOutThings = True
-    writeToFile = False
+    writeToFile = True
 
-    for x in img_array:  
+    for image_name in img_array:
         t = time.time()
         clusterArray = [] 
         circleArray = []  
@@ -49,7 +49,7 @@ if __name__ == '__main__':
         triangleType = False 
 
         # Read the image
-        img_orginal = cv2.imread(x, cv2.IMREAD_GRAYSCALE)
+        img_orginal = cv2.imread(image_name, cv2.IMREAD_GRAYSCALE)
 
         # The Triangle and Circle image have some stuff at the bottom we need to cut of,
         img_orginal = img_orginal[0:870, :]  ## cut off the bottom manual at this moment
@@ -102,16 +102,16 @@ if __name__ == '__main__':
                 for j in circles[0, :]:
                     numberOfCircles = numberOfCircles + 1
                 totalNumberOfCircles = totalNumberOfCircles + numberOfCircles
-                circlePicture = x
+                circlePicture = image_name
                 circleClusters = numberOfClusters
                 count_circles.append(numberOfCircles)
             elif triangleType == True:
                 numberOfTriangles = numberOfTriangles + c
-                trianglePicture = x
+                trianglePicture = image_name
                 trianglesClusters = numberOfClusters
                 count_triangles.append(c)
             elif rodType == True: 
-                linePicture = x
+                linePicture = image_name
                 lineClusterCount = numberOfClusters
                 img_lines, numberOfLines = countRods(i)
                 totalNumberOfLines = totalNumberOfLines + numberOfLines
@@ -123,7 +123,7 @@ if __name__ == '__main__':
             else: 
                 print("-------------------------\n\n[ERROR] - Unable to classify cluster type!! \n\n-------------------------")
 
-            count_foreground_pixels[img_array.index(x)].append((np.count_nonzero(img_thresh)/img_thresh.size)*100)
+            count_foreground_pixels[img_array.index(image_name)].append((np.count_nonzero(img_thresh) / img_thresh.size) * 100)
 
             if printOutThings == True:
                 # Basic plotting 
@@ -139,8 +139,7 @@ if __name__ == '__main__':
                 count += 1
 
         if printOutThings == True:
-            x = watershed_clusters
-            y=ForegBackg ##normalize the data?
+
             plt.show()
 
             if rodType == True:
@@ -159,33 +158,30 @@ if __name__ == '__main__':
                 plt.show()
 
             if rodType == False:
-                n, bins, patches = plt.hist(x,20, facecolor='blue', alpha=0.5)
+                n, bins, patches = plt.hist(watershed_clusters,20, facecolor='blue', alpha=0.5)
                 print("n", n,"bins", bins, "patches", patches)
                 plt.xlabel('Bins')
                 plt.ylabel('Frequency')
                 plt.title('Nr particles watershed')
                 plt.show()
 
-                n, bins, patches = plt.hist(y,10,  facecolor='red', alpha=0.5)
+                n, bins, patches = plt.hist(ForegBackg,10,  facecolor='red', alpha=0.5)
                 print("n", n, "bins", bins, "patches", patches)
                 plt.xlabel('Bins')
                 plt.ylabel('Frequency')
                 plt.title('Area per perticle watershed')
                 plt.show()
 
-            x = np.linspace(0,450, len(n))
             xdata = np.linspace(0, 450, 40)
-            fittingFunction, cov = scipy.stats.distributions.norm.fit(y)
-            fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
+            Mean, cov = scipy.stats.distributions.norm.fit(ForegBackg)
+            fitted_data = scipy.stats.distributions.norm.pdf(xdata, Mean, cov)
             plt.plot(xdata, fitted_data, 'r-')
             # Get the standard deviations of the parameters (square roots of the # diagonal of the covariance)
             plt.show()
 
-            plt.scatter(x, n)
-            plt.show()
 
             if (writeToFile):
-                name = x.replace(".", "")
+                name = image_name.replace(".", "")
                 name = name.replace("png", "")
                 name = name.replace("tif", "")
                 print("Data Storred in ", "." + name + ".txt", "a")
@@ -196,19 +192,19 @@ if __name__ == '__main__':
                 f.close()
 
             xdata = np.linspace(0, 450, 40)
-            fittingFunction, cov = scipy.stats.distributions.norm.fit(ForegBackg)
-            fitted_data = scipy.stats.distributions.norm.pdf(xdata, fittingFunction, cov)
+            Mean, cov = scipy.stats.distributions.norm.fit(ForegBackg)
+            fitted_data = scipy.stats.distributions.norm.pdf(xdata, Mean, cov)
             plt.plot(xdata, fitted_data, 'r-')
 
 
         elapse = time.time() - t
         if elapse <= shortestTime:
             shortestTime = elapse
-            shortestPicture = x
+            shortestPicture = image_name
 
         if elapse >= longestTime:
             longestTime = elapse
-            longestPicture = x
+            longestPicture = image_name
 
         totalTime = totalTime + elapse
 
