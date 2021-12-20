@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output
 # from skimage import data
 import json
 
-img = cv2.imread("001_002.tif")
+img = cv2.imread("../pictures/T001.png")
 fig = px.imshow(img, binary_string=True)
 fig.update_layout(dragmode="drawrect")
 config = {
