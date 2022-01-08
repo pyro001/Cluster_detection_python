@@ -2,7 +2,6 @@ from lib.OIP21_group3 import *
 
 if __name__ == '__main__':
     img_array = ['./pictures/001_002.tif', './pictures/R001_001.tif', './pictures/T001.png']
-    img_array = ['./pictures/R001_001.tif']
 
     totalNumberOfClusters = 0  
     totalNumberOfParticles = 0 
@@ -30,7 +29,7 @@ if __name__ == '__main__':
 
 
     printOutThings = False
-    writeToFile = True 
+    writeToFile = False 
 
     for image_name in img_array:
         t = time.time()
@@ -272,8 +271,8 @@ if __name__ == '__main__':
 
     axs1[0].hist(count_foreground_pixels, numberOfClusters, color=["red", "green", "blue"])
     axs1[1].hist(count_foreground_pixels[0], len(count_foreground_pixels[0]), color="red")
-    #axs1[2].hist(count_foreground_pixels[1], len(count_foreground_pixels[1]), color="green")
-    #axs1[3].hist(count_foreground_pixels[2], len(count_foreground_pixels[2]), color="blue")
+    axs1[2].hist(count_foreground_pixels[1], len(count_foreground_pixels[1]), color="green")
+    axs1[3].hist(count_foreground_pixels[2], len(count_foreground_pixels[2]), color="blue")
     
     if len(count_circles) != 0: 
         axs2[0].boxplot(count_circles)
@@ -286,7 +285,7 @@ if __name__ == '__main__':
     if len(count_triangles) != 0: 
         axs4[0].boxplot(count_triangles)
         axs4[1].violinplot(count_triangles)
-    #plt.show()
+    plt.show()
 
 
     #-----------------   First idea of rod counting  --------------------
